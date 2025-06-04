@@ -26,13 +26,14 @@ export default function Game({ week, nickname, goHome }) {
   const [elapsed, setElapsed] = useState(0);
   const [startTime, setStartTime] = useState(Date.now());
   const [finished, setFinished] = useState(false);
+  const [currentWeek, setCurrentWeek] = useState(week);
 
   useEffect(() => {
-    const vocab = words[week] || [];
+    const vocab = words[currentWeek] || [];
     setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
     setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
     setStartTime(Date.now());
-  }, [week]);
+  }, [currentWeek]);
 
   useEffect(() => {
     if (finished) return;
@@ -60,7 +61,7 @@ export default function Game({ week, nickname, goHome }) {
 
 
   const saveScore = () => {
-    const key = `ranking_${week}`;
+    const key = `ranking_${currentWeek}`;
     const old = JSON.parse(localStorage.getItem(key) || "[]");
     const score = { name: nickname, time: elapsed };
     const updated = [...old, score].sort((a, b) => a.time - b.time).slice(0, 5);
@@ -69,7 +70,7 @@ export default function Game({ week, nickname, goHome }) {
 
   return (
     <div className="min-h-screen p-6 bg-pastel font-sans text-center">
-      <h1 className="text-xl font-bold mb-2">จับคู่คำศัพท์ - {week.toUpperCase()}</h1>
+      <h1 className="text-xl font-bold mb-2">จับคู่คำศัพท์ - {currentWeek.toUpperCase()}</h1>
       <p className="mb-4">ชื่อ: {nickname} | เวลา: {elapsed}s</p>
       <div className="grid grid-cols-2 gap-6 max-w-5xl mx-auto">
         {/* ฝั่งซ้าย: คำศัพท์ */}
@@ -130,7 +131,7 @@ export default function Game({ week, nickname, goHome }) {
                 setElapsed(0);
                 setStartTime(Date.now());
 
-                const vocab = words[week] || [];
+                const vocab = words[currentWeek] || [];
                 setTerms(shuffle(vocab.map((v) => ({ text: v.term, pair: v.definition }))));
                 setDefs(shuffle(vocab.map((v) => ({ text: v.definition, pair: v.term }))));
               }}
@@ -142,7 +143,7 @@ export default function Game({ week, nickname, goHome }) {
 
             <button
               onClick={() => {
-                const next = parseInt(week.split("_")[1]) + 1;
+                const next = parseInt(currentWeek.split("_")[1]) + 1;
                 if (next <= 7) {
                   const newWeek = `week_${next}`;
                   const vocab = words[newWeek] || [];
