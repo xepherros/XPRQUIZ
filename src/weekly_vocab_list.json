@@ -1,296 +1,86 @@
 {
   "week_1": [
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    },
-    {
-      "term": "IATA CODE",
-      "definition": "รหัสตัวแทน IATA"
-    }
+    { "term": "AGENT IATA CODE", "definition": "รหัสตัวแทน IATA" },
+    { "term": "AIR WAYBILL", "definition": "ใบตราส่งสินค้าทางอากาศ" },
+    { "term": "AIRPORT OF DEPARTURE", "definition": "สนามบินต้นทาง" },
+    { "term": "AIRPORT OF DESTINATION", "definition": "สนามบินปลายทาง" },
+    { "term": "ARRIVAL NOTICE", "definition": "ใบแจ้งว่าเรือได้มาถึง" },
+    { "term": "BERTH", "definition": "ท่าเทียบเรือ" },
+    { "term": "BILL OF LADING", "definition": "ใบตราส่งสินค้าทางเรือ" },
+    { "term": "BULK CARGO", "definition": "สินค้าเทกอง" },
+    { "term": "BULK CARRIER", "definition": "เรือขนสินค้าเทกอง" },
+    { "term": "CARRIER", "definition": "สายการบินที่ทำการขนส่ง" }
   ],
   "week_2": [
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    },
-    {
-      "term": "AIR WAYBILL",
-      "definition": "ใบตราส่งสินค้าทางอากาศ"
-    }
+    { "term": "CARRIER'S AGENT", "definition": "ตัวแทนผู้รับขนส่ง" },
+    { "term": "CFS/CFS", "definition": "ระบุการขนส่งแบบ CFS ทั้งต้นทาง/ปลายทาง" },
+    { "term": "CHARGEABLE WEIGHT", "definition": "น้ำหนักที่ใช้คำนวณค่าระวาง" },
+    { "term": "CONSIGNEE", "definition": "ผู้รับตราส่งสินค้า" },
+    { "term": "CONSOLIDATION", "definition": "การรวบรวมสินค้า" },
+    { "term": "CONTAINER AND SEAL NO.", "definition": "หมายเลขตู้และผนึก" },
+    { "term": "CONTAINER CARRIER", "definition": "เรือขนส่งตู้สินค้า" },
+    { "term": "CONVENTIONAL VESSEL", "definition": "เรือขนสินค้าทั่วไป" },
+    { "term": "CY (CONTAINER YARD)", "definition": "ลานตู้คอนเทนเนอร์" },
+    { "term": "CY/CY", "definition": "ส่งออกและนำเข้าแบบ CY" }
   ],
   "week_3": [
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    },
-    {
-      "term": "BERTH",
-      "definition": "ท่าเทียบเรือ"
-    }
+    { "term": "DECLARED VALUE FOR CARRIER", "definition": "ราคาที่แสดงต่อสายการบิน" },
+    { "term": "DECLARED VALUE FOR CUSTOMS", "definition": "ราคาที่แสดงต่อศุลกากร" },
+    { "term": "DELIVERY ORDER", "definition": "ใบสั่งปล่อยสินค้า" },
+    { "term": "DEMURRAGE CHARGE", "definition": "ค่าเสียเวลาของเรือหรือตู้" },
+    { "term": "DESCRIPTION OF GOODS", "definition": "รายละเอียดสินค้า" },
+    { "term": "E.T.A.", "definition": "ประมาณวันมาถึง" },
+    { "term": "E.T.D.", "definition": "ประมาณวันออกเดินทาง" },
+    { "term": "EXECUTED ON", "definition": "วันที่ออกเอกสาร" },
+    { "term": "FCL", "definition": "ตู้บรรจุเต็ม" },
+    { "term": "FLIGHT/DATE", "definition": "เที่ยวบินและวันที่ออกเดินทาง" }
   ],
   "week_4": [
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    },
-    {
-      "term": "CARRIER",
-      "definition": "สายการบินที่ทำการขนส่งสินค้า"
-    }
+    { "term": "FREIGHT COLLECT", "definition": "ค่าระวางปลายทาง" },
+    { "term": "FREIGHT FORWARDER", "definition": "ตัวแทนขนส่งสินค้า" },
+    { "term": "FREIGHT PREPAID", "definition": "ค่าระวางต้นทาง" },
+    { "term": "GROSS WEIGHT", "definition": "น้ำหนักรวมสินค้า" },
+    { "term": "HAZARDOUS GOODS", "definition": "สินค้าอันตราย" },
+    { "term": "HOUSE AIR WAYBILL", "definition": "ใบตราส่งที่ออกโดย forwarder" },
+    { "term": "I.C.D.", "definition": "สถานีตู้สินค้านอกเขตท่า" },
+    { "term": "IATA CARGO AGENT", "definition": "ตัวแทน IATA" },
+    { "term": "LCL", "definition": "สินค้าบรรจุไม่เต็มตู้" },
+    { "term": "MANIFEST", "definition": "บัญชีรายการสินค้า" }
   ],
   "week_5": [
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    },
-    {
-      "term": "BILL OF LADING",
-      "definition": "ใบตราส่งสินค้าทางเรือ"
-    }
+    { "term": "MARK & NO.", "definition": "เครื่องหมายและเลขหีบห่อ" },
+    { "term": "MASTER", "definition": "กัปตันเรือ" },
+    { "term": "MASTER AIR WAYBILL", "definition": "ใบตราส่งโดยสายการบิน" },
+    { "term": "MATE'S RECEIPT", "definition": "ใบรับจากต้นหน" },
+    { "term": "MEASUREMENT/ GROSS WEIGHT", "definition": "ขนาดและน้ำหนักรวม" },
+    { "term": "MULTIMODAL TRANSPORT DOCUMENT", "definition": "เอกสารขนส่งหลายแบบ" },
+    { "term": "N.V.O.C.C.", "definition": "ผู้รับขนส่งที่ไม่มีเรือเอง" },
+    { "term": "NOTIFY PARTY", "definition": "ผู้แจ้งเมื่อสินค้ามาถึง" },
+    { "term": "NUMBER OF ORIGINAL", "definition": "จำนวนต้นฉบับของ B/L" },
+    { "term": "PLACE AND DATE OF ISSUED", "definition": "สถานที่และวันออก B/L" }
   ],
   "week_6": [
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    },
-    {
-      "term": "CONSIGNEE",
-      "definition": "ผู้รับตราส่งสินค้า"
-    }
+    { "term": "PLACE OF DELIVERY", "definition": "สถานที่ส่งมอบสินค้า" },
+    { "term": "PLACE OF LOADING", "definition": "สถานที่ขนส่งสินค้า" },
+    { "term": "PLACE OF RECEIPT", "definition": "สถานที่รับสินค้า" },
+    { "term": "PORT OF DISCHARGE", "definition": "ท่าปลายทาง" },
+    { "term": "PORT OF LOADING", "definition": "ท่าต้นทาง" },
+    { "term": "PRE-CARRIER", "definition": "เรือส่งต่อก่อนเรือใหญ่" },
+    { "term": "RATE CLASS", "definition": "ระดับอัตราค่าระวาง" },
+    { "term": "RO-RO CARRIER", "definition": "เรือบรรทุกวิ่งเข้าออก" },
+    { "term": "SURRENDER BILL OF LADING", "definition": "บิลที่ไม่ต้องใช้ต้นฉบับ" },
+    { "term": "SHIPPED ON BOARD", "definition": "ระบุว่าสินค้าลงเรือแล้ว" }
   ],
   "week_7": [
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    },
-    {
-      "term": "DECLARED VALUE",
-      "definition": "มูลค่าที่ประกาศ"
-    }
+    { "term": "SHIPPER", "definition": "ผู้ส่งสินค้า" },
+    { "term": "SHIPPING AGENT", "definition": "ตัวแทนเรือ" },
+    { "term": "SHOULD BE", "definition": "การขอแก้ไขเอกสาร" },
+    { "term": "TALLY SHEET", "definition": "เอกสารบันทึกรับสินค้า" },
+    { "term": "TEU", "definition": "ตู้คอนเทนเนอร์ขนาด 20 ฟุต" },
+    { "term": "THROUGH BILL OF LADING", "definition": "บิลสำหรับส่งตลอดเส้นทาง" },
+    { "term": "UN CLASSIFICATION NUMBER", "definition": "รหัสสินค้าตามมาตรฐาน UN" },
+    { "term": "V.O.C.C.", "definition": "เรือที่เจ้าของเรือดำเนินการเอง" },
+    { "term": "VESSEL", "definition": "เรือที่ใช้เดินทาง" },
+    { "term": "VOY.NO.", "definition": "หมายเลขเที่ยวเรือ" }
   ]
 }
