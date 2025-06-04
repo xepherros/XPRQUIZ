@@ -23,12 +23,12 @@ export default function Game({ week, nickname, goHome }) {
   const [defs, setDefs] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [matchedIds, setMatchedIds] = useState([]); // array of unique id
+  const [wrongPair, setWrongPair] = useState(null);  // { termId, defId }
   const [elapsed, setElapsed] = useState(0);
   const [startTime, setStartTime] = useState(Date.now());
   const [finished, setFinished] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(week);
 
-  // ให้ id เป็น index เดิมใน vocab list
   function generateTermDef(vocab) {
     return {
       terms: vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition })),
@@ -46,6 +46,7 @@ export default function Game({ week, nickname, goHome }) {
     setMatchedIds([]);
     setSelectedTerm(null);
     setFinished(false);
+    setWrongPair(null);
   }, [currentWeek]);
 
   useEffect(() => {
@@ -65,11 +66,18 @@ export default function Game({ week, nickname, goHome }) {
 
   const handleMatch = (def) => {
     if (!selectedTerm) return;
-    // ถ้า id ตรงกัน คือจับคู่สำเร็จ
     if (selectedTerm.id === def.id) {
       setMatchedIds([...matchedIds, selectedTerm.id]);
+      setSelectedTerm(null);
+      setWrongPair(null);
+    } else {
+      setWrongPair({ termId: selectedTerm.id, defId: def.id });
+      // Reset wrong color after 700ms and allow user to select again
+      setTimeout(() => {
+        setWrongPair(null);
+        setSelectedTerm(null);
+      }, 700);
     }
-    setSelectedTerm(null);
   };
 
   const saveScore = () => {
@@ -90,6 +98,7 @@ export default function Game({ week, nickname, goHome }) {
     setFinished(false);
     setElapsed(0);
     setStartTime(Date.now());
+    setWrongPair(null);
   };
 
   const goNextWeek = () => {
@@ -106,6 +115,7 @@ export default function Game({ week, nickname, goHome }) {
       setFinished(false);
       setElapsed(0);
       setStartTime(Date.now());
+      setWrongPair(null);
     } else {
       alert("ไม่มีสัปดาห์ถัดไปแล้ว");
     }
@@ -125,14 +135,15 @@ export default function Game({ week, nickname, goHome }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-              ${matchedIds.includes(term.id)
-                ? 'bg-green-500 text-white font-bold'
-                : selectedTerm?.id === term.id
-                  ? 'bg-yellow-200'
-                  : ''}
+                ${matchedIds.includes(term.id)
+                  ? 'bg-green-500 text-white font-bold'
+                  : (wrongPair && wrongPair.termId === term.id)
+                    ? 'bg-red-400 text-white'
+                    : ''}
               `}
               onClick={() => {
-                if (!matchedIds.includes(term.id)) {
+                // เลือก term ได้เฉพาะตอนที่ยังไม่ได้ matched และยังไม่อยู่ในสถานะผิด
+                if (!matchedIds.includes(term.id) && !wrongPair) {
                   speak(term.text);
                   setSelectedTerm(term);
                 }
@@ -154,12 +165,13 @@ export default function Game({ week, nickname, goHome }) {
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
                 ${matchedIds.includes(def.id)
                   ? 'bg-green-500 text-white font-bold'
-                  : selectedTerm?.pair === def.text && selectedTerm?.id === def.id && !matchedIds.includes(def.id)
-                    ? 'bg-blue-100'
+                  : (wrongPair && wrongPair.defId === def.id)
+                    ? 'bg-red-400 text-white'
                     : ''}
               `}
               onClick={() => {
-                if (!matchedIds.includes(def.id)) {
+                // คลิก def ได้เฉพาะกรณีเลือก term อยู่, def ยังไม่ matched, และยังไม่อยู่ในสถานะผิด
+                if (selectedTerm && !matchedIds.includes(def.id) && !wrongPair) {
                   handleMatch(def);
                 }
               }}
