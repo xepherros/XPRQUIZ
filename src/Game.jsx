@@ -259,7 +259,7 @@ export default function Game({ week, nickname, goHome }) {
         </button>
         <button
           onClick={goPrevWeek}
-          className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
+          className="bg-blue-500 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
         >
           ⏮️ สัปดาห์ก่อนหน้า
         </button>
