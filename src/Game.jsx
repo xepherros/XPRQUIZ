@@ -14,6 +14,17 @@ function speak(text) {
   window.speechSynthesis.speak(utter);
 }
 
+// ฟังก์ชันเล่นเสียง
+function playSound(src) {
+  const audio = new window.Audio(src);
+  audio.currentTime = 0;
+  audio.play();
+}
+
+const correctSound = '/sounds/Correct.mp3';
+const wrongSound = '/sounds/Wrong.wav';
+const winSound = '/sounds/Win.wav';
+
 function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
 }
@@ -60,17 +71,20 @@ export default function Game({ week, nickname, goHome }) {
   useEffect(() => {
     if (terms.length > 0 && matchedIds.length === terms.length) {
       setFinished(true);
+      playSound(winSound);
       saveScore();
     }
-  }, [matchedIds, terms.length]);
+  }, [matchedIds, terms.length]); // เพิ่ม playSound(winSound) เมื่อจบเกม
 
   const handleMatch = (def) => {
     if (!selectedTerm) return;
     if (selectedTerm.id === def.id) {
+      playSound(correctSound); // เสียงถูก
       setMatchedIds([...matchedIds, selectedTerm.id]);
       setSelectedTerm(null);
       setWrongPair(null);
     } else {
+      playSound(wrongSound); // เสียงผิด
       setWrongPair({ termId: selectedTerm.id, defId: def.id });
       setTimeout(() => {
         setWrongPair(null);
