@@ -6,6 +6,14 @@ export default function AppVocab({ goHome }) {
   const [week, setWeek] = useState('');
   const [start, setStart] = useState(false);
 
+  // reset state และแจ้ง parent กลับเมนูหลัก
+  const handleGoHome = () => {
+    setNickname('');
+    setWeek('');
+    setStart(false);
+    if (goHome) goHome();
+  };
+
   const handleStart = () => {
     if (nickname && week) {
       setStart(true);
@@ -42,10 +50,11 @@ export default function AppVocab({ goHome }) {
         </div>
       ) : (
         <div className="w-full">
-          <Game nickname={nickname} week={week} />
+          <Game nickname={nickname} week={week} goHome={handleGoHome} />
+          {/* เผื่อ Game ไม่มีปุ่มกลับหน้าหลักเอง */}
           <button
             className="mt-4 bg-pink-500 text-white px-4 py-2 rounded w-full hover:bg-pink-600 transition"
-            onClick={goHome}
+            onClick={handleGoHome}
           >
             กลับหน้าหลัก
           </button>
