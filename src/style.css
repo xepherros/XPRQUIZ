@@ -1,0 +1,36 @@
+
+body {
+  font-family: sans-serif;
+  background-color: #f0f8ff;
+  display: flex;
+  justify-content: center;
+  padding: 30px;
+}
+
+#game-container {
+  text-align: center;
+}
+
+.letter-box {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  margin: 5px;
+  border: 2px dashed #aaa;
+  vertical-align: middle;
+  font-size: 24px;
+  line-height: 40px;
+}
+
+.letter-tile {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  margin: 5px;
+  background-color: #add8e6;
+  text-align: center;
+  line-height: 40px;
+  font-size: 24px;
+  cursor: move;
+  border-radius: 5px;
+}
