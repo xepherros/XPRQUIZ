@@ -15,14 +15,6 @@ const App = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-pastel px-4">
 
-      {/* ทดสอบสี Tailwind */}
-      <div className="flex gap-2 mb-6">
-        <div className="bg-green-500 text-white p-4 rounded">bg-green-500</div>
-        <div className="bg-red-400 text-white p-4 rounded">bg-red-400</div>
-        <div className="bg-blue-500 text-white p-4 rounded">bg-blue-500</div>
-        <div className="bg-pastel text-black p-4 rounded">bg-pastel</div>
-      </div>
-
       {!start ? (
         <div className="bg-white p-6 rounded-2xl shadow max-w-md w-full space-y-4">
           <h1 className="text-2xl font-bold text-center">เริ่มเกมจับคู่คำศัพท์</h1>
