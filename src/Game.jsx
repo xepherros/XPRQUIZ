@@ -83,7 +83,8 @@ export default function Game({ week, nickname, goHome }) {
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
                 ${selectedTerm?.text === term.text ? 'bg-yellow-200' :
-                  matchedPairs.includes(term.text) ? 'bg-green-200 text-green-900' : ''}
+                ${matchedPairs.includes(term.text) ? 'bg-green-500 text-white font-bold' : ''}
+
               `}
               onClick={() => {
                 speak(term.text);
@@ -105,7 +106,8 @@ export default function Game({ week, nickname, goHome }) {
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
                 ${selectedTerm && selectedTerm.pair === def.text ? 'bg-blue-100' : ''}
-                ${matchedPairs.includes(def.pair) ? 'bg-green-200 text-green-900' : ''}
+                ${matchedPairs.includes(def.pair) ? 'bg-green-500 text-white font-bold' : ''}
+
               `}
               onClick={() => handleMatch(def)}
             >
