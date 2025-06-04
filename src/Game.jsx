@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import words from './weekly_vocab_list.json';
 
 // ========== เพิ่ม URL Google Apps Script ==========
-const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwgoLCQOBRQccg3FrLLg76wERwRHzAD2L4QBSMJGMroWSBHuOz00YPZLOZ8eCK3M2iaQw/exec";
+const SHEET_API_URL = "/api/gas-proxy";
 // ===================================================
 
 function speak(text, lang = 'auto') {
