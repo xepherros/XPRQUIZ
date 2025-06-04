@@ -32,7 +32,8 @@ function shuffle(arr) {
 export default function Game({ week, nickname, goHome }) {
   const [terms, setTerms] = useState([]);
   const [defs, setDefs] = useState([]);
-  const [selectedTerm, setSelectedTerm] = useState(null);
+  // เปลี่ยน selection เป็น { type: 'term'|'def', item }
+  const [selection, setSelection] = useState(null);
   const [matchedIds, setMatchedIds] = useState([]);
   const [wrongPair, setWrongPair] = useState(null); // { termId, defId }
   const [elapsed, setElapsed] = useState(0);
@@ -55,7 +56,7 @@ export default function Game({ week, nickname, goHome }) {
     setStartTime(Date.now());
     setElapsed(0);
     setMatchedIds([]);
-    setSelectedTerm(null);
+    setSelection(null);
     setFinished(false);
     setWrongPair(null);
   }, [currentWeek]);
@@ -74,21 +75,40 @@ export default function Game({ week, nickname, goHome }) {
       playSound(winSound);
       saveScore();
     }
-  }, [matchedIds, terms.length]); // เพิ่ม playSound(winSound) เมื่อจบเกม
+  }, [matchedIds, terms.length]);
 
-  const handleMatch = (def) => {
-    if (!selectedTerm) return;
-    if (selectedTerm.id === def.id) {
-      playSound(correctSound); // เสียงถูก
-      setMatchedIds([...matchedIds, selectedTerm.id]);
-      setSelectedTerm(null);
+  // ฟังก์ชันเลือกฝั่งใดก็ได้
+  const handleSelect = (type, item) => {
+    if (matchedIds.includes(item.id) || (wrongPair && ((type === 'term' && wrongPair.termId === item.id) || (type === 'def' && wrongPair.defId === item.id)))) {
+      return;
+    }
+    // ถ้า selection ยังไม่มี ให้เลือกก่อน
+    if (!selection) {
+      speak(item.text);
+      setSelection({ type, item });
+      return;
+    }
+    // ถ้าเลือกอันเดิม หรือคนละฝั่ง
+    if (selection.type === type) {
+      // เลือกใหม่ฝั่งเดียวกัน
+      speak(item.text);
+      setSelection({ type, item });
+      return;
+    }
+    // ถ้าเลือก term กับ def แล้ว
+    const term = type === 'term' ? item : selection.item;
+    const def = type === 'def' ? item : selection.item;
+    if (term.id === def.id) {
+      playSound(correctSound);
+      setMatchedIds([...matchedIds, term.id]);
+      setSelection(null);
       setWrongPair(null);
     } else {
-      playSound(wrongSound); // เสียงผิด
-      setWrongPair({ termId: selectedTerm.id, defId: def.id });
+      playSound(wrongSound);
+      setWrongPair({ termId: term.id, defId: def.id });
       setTimeout(() => {
         setWrongPair(null);
-        setSelectedTerm(null);
+        setSelection(null);
       }, 700);
     }
   };
@@ -107,7 +127,7 @@ export default function Game({ week, nickname, goHome }) {
     setTerms(shuffle(terms));
     setDefs(shuffle(defs));
     setMatchedIds([]);
-    setSelectedTerm(null);
+    setSelection(null);
     setFinished(false);
     setElapsed(0);
     setStartTime(Date.now());
@@ -124,7 +144,7 @@ export default function Game({ week, nickname, goHome }) {
       setTerms(shuffle(terms));
       setDefs(shuffle(defs));
       setMatchedIds([]);
-      setSelectedTerm(null);
+      setSelection(null);
       setFinished(false);
       setElapsed(0);
       setStartTime(Date.now());
@@ -148,19 +168,16 @@ export default function Game({ week, nickname, goHome }) {
               colorClass = "bg-green-500 text-white font-bold";
             } else if (wrongPair && wrongPair.termId === term.id) {
               colorClass = "bg-red-400 text-white";
+            } else if (selection && selection.type === 'term' && selection.item.id === term.id) {
+              colorClass = "bg-yellow-300 text-black font-bold";
             }
             return (
               <motion.div
                 key={term.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: matchedIds.includes(term.id) ? 1 : 1.05 }}
+                whileTap={{ scale: matchedIds.includes(term.id) ? 1 : 0.95 }}
                 className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
-                onClick={() => {
-                  if (!matchedIds.includes(term.id) && !wrongPair) {
-                    speak(term.text);
-                    setSelectedTerm(term);
-                  }
-                }}
+                onClick={() => handleSelect('term', term)}
               >
                 {term.text}
               </motion.div>
@@ -176,18 +193,16 @@ export default function Game({ week, nickname, goHome }) {
               colorClass = "bg-green-500 text-white font-bold";
             } else if (wrongPair && wrongPair.defId === def.id) {
               colorClass = "bg-red-400 text-white";
+            } else if (selection && selection.type === 'def' && selection.item.id === def.id) {
+              colorClass = "bg-blue-300 text-black font-bold";
             }
             return (
               <motion.div
                 key={def.id}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: matchedIds.includes(def.id) ? 1 : 1.05 }}
+                whileTap={{ scale: matchedIds.includes(def.id) ? 1 : 0.95 }}
                 className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
-                onClick={() => {
-                  if (selectedTerm && !matchedIds.includes(def.id) && !wrongPair) {
-                    handleMatch(def);
-                  }
-                }}
+                onClick={() => handleSelect('def', def)}
               >
                 {def.text}
               </motion.div>
