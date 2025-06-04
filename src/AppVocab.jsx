@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import Game from './Game';
 
-const AppVocab = () => {
+export default function AppVocab({ goHome }) {
+  const AppVocab = () => {
   const [nickname, setNickname] = useState('');
   const [week, setWeek] = useState('');
   const [start, setStart] = useState(false);
@@ -47,5 +48,3 @@ const AppVocab = () => {
     </div>
   );
 };
-
-export default AppVocab;
