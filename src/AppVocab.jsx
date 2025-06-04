@@ -51,13 +51,6 @@ export default function AppVocab({ goHome }) {
       ) : (
         <div className="w-full">
           <Game nickname={nickname} week={week} goHome={handleGoHome} />
-          {/* เผื่อ Game ไม่มีปุ่มกลับหน้าหลักเอง */}
-          <button
-            className="mt-4 bg-pink-500 text-white px-4 py-2 rounded w-full hover:bg-pink-600 transition"
-            onClick={handleGoHome}
-          >
-            กลับหน้าหลัก
-          </button>
         </div>
       )}
     </div>
