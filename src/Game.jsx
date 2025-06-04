@@ -148,6 +148,26 @@ export default function Game({ week, nickname, goHome }) {
     setWrongPair(null);
   };
 
+  const goPrevWeek = () => {
+    const prev = parseInt(currentWeek.split("_")[1]) - 1;
+    if (prev >= 1) {
+      const newWeek = `week_${prev}`;
+      const vocab = words[newWeek] || [];
+      setCurrentWeek(newWeek);
+      const { terms, defs } = generateTermDef(vocab);
+      setTerms(shuffle(terms));
+      setDefs(shuffle(defs));
+      setMatchedIds([]);
+      setSelection(null);
+      setFinished(false);
+      setElapsed(0);
+      setStartTime(Date.now());
+      setWrongPair(null);
+    } else {
+      alert("ไม่มีสัปดาห์ก่อนหน้าแล้ว");
+    }
+  };
+  
   const goNextWeek = () => {
     const next = parseInt(currentWeek.split("_")[1]) + 1;
     if (next <= 7) {
@@ -236,6 +256,12 @@ export default function Game({ week, nickname, goHome }) {
           className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
         >
           🔄 เริ่มใหม่
+        </button>
+        <button
+          onClick={goPrevWeek}
+          className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
+        >
+          ⏮️ สัปดาห์ก่อนหน้า
         </button>
         <button
           onClick={goNextWeek}
