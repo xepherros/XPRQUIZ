@@ -28,12 +28,9 @@ export default function AppSpelling({ goHome }) {
   const [resultColor, setResultColor] = useState("black");
   const [disableNext, setDisableNext] = useState(true);
 
-  // สำหรับ tap tile ในมือถือ
   const [selectedTileIdx, setSelectedTileIdx] = useState(null);
-
   const samanthaVoice = useRef(null);
 
-  // Prepare the word and tiles each time currentWordIndex changes
   useEffect(() => {
     const word = words[currentWordIndex].toUpperCase();
     const letters = word.replace(/ /g, '').split('');
@@ -49,7 +46,6 @@ export default function AppSpelling({ goHome }) {
     setSelectedTileIdx(null);
   }, [currentWordIndex]);
 
-  // Voice setup
   useEffect(() => {
     const setVoice = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -59,30 +55,25 @@ export default function AppSpelling({ goHome }) {
     setVoice();
   }, []);
 
-  // Drag and drop handlers
   const handleTileDragStart = (idx) => setSelectedTileIdx(idx);
 
   const handleSlotDrop = (slotIdx) => {
     if (selectedTileIdx == null) return;
     setSlots(slots => slots.map((slot, i) => {
       if (i !== slotIdx || slot.letter === " ") return slot;
-      if (slot.tile) return slot; // already filled
+      if (slot.tile) return slot;
       return { ...slot, filled: true, tile: tiles[selectedTileIdx] };
     }));
     setTiles(tiles => tiles.filter((_, i) => i !== selectedTileIdx));
     setSelectedTileIdx(null);
   };
 
-  // แตะ tile เพื่อเตรียมวาง (มือถือ)
   const handleTileTap = (idx) => setSelectedTileIdx(idx);
-
-  // แตะ slot เพื่อวาง tile (มือถือ)
   const handleSlotTap = (slotIdx) => {
     if (selectedTileIdx == null) return;
     handleSlotDrop(slotIdx);
   };
 
-  // Remove a tile from a slot (optional: enable swapping back)
   const handleSlotClick = (slotIdx) => {
     setSlots(slots => {
       const slot = slots[slotIdx];
@@ -92,7 +83,6 @@ export default function AppSpelling({ goHome }) {
     });
   };
 
-  // Check answer
   const checkAnswer = () => {
     let built = "";
     slots.forEach(slot => {
@@ -111,10 +101,7 @@ export default function AppSpelling({ goHome }) {
     }
   };
 
-  // Reset current word
   const resetWord = () => setCurrentWordIndex(idx => idx);
-
-  // Next word
   const nextWord = () => {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
@@ -124,7 +111,6 @@ export default function AppSpelling({ goHome }) {
     }
   };
 
-  // Speech synthesis
   const speak = () => {
     if (!window.speechSynthesis) {
       alert("Speech synthesis not supported.");
@@ -141,7 +127,6 @@ export default function AppSpelling({ goHome }) {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Responsive style
   const styles = {
     container: {
       maxWidth: 480,
