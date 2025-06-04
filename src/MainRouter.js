@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MainMenu from "./MainMenu";
-import AppVocab from "./AppVocab";        // เกมจับคู่คำศัพท์
-import AppSpelling from "./AppSpelling";  // เกมสะกดคำ
+import AppVocab from "./AppVocab";
+import AppSpelling from "./AppSpelling";
 
 export default function MainRouter() {
   const [screen, setScreen] = useState("mainmenu");
