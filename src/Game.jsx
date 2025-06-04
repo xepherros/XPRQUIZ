@@ -3,15 +3,14 @@ import { motion } from 'framer-motion';
 import words from './weekly_vocab_list.json';
 
 function speak(text, lang = 'auto') {
-  // กำหนดว่าถ้า lang เป็น 'auto' จะเลือก en หรือ th ตามตัวอักษร
   let detectLang = lang;
   if (lang === 'auto') {
-    // ถ้ามีอักษร a-z หรือ A-Z จำนวนมากกว่า 50% ให้เป็นอังกฤษ
     const enCount = (text.match(/[a-zA-Z]/g) || []).length;
     const thCount = (text.match(/[\u0E00-\u0E7F]/g) || []).length;
     detectLang = enCount > thCount ? 'en-US' : 'th-TH';
   }
-  // ข้อยกเว้นภาษาอังกฤษตัวย่อ
+
+  // ข้อยกเว้นภาษาอังกฤษตัวย่อ (แทนที่ในประโยค)
   const exceptions = {
     IATA: "I. A. T. A.",
     ETA: "E. T. A.",
@@ -19,7 +18,14 @@ function speak(text, lang = 'auto') {
     FCL: "F. C. L.",
     LCL: "L. C. L."
   };
-  const spoken = exceptions[text.toUpperCase()] || text;
+
+  // ใช้ regex แทนที่ทุกคำย่อในข้อความ
+  let spoken = text;
+  Object.keys(exceptions).forEach(key => {
+    const reg = new RegExp(`\\b${key}\\b`, "g");
+    spoken = spoken.replace(reg, exceptions[key]);
+  });
+
   const utter = new window.SpeechSynthesisUtterance(spoken);
   utter.lang = detectLang;
   window.speechSynthesis.cancel();
