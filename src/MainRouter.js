@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MainMenu from "./MainMenu";
-import AppSpelling from "./AppSpelling";
 import AppVocab from "./AppVocab";
+import AppSpelling from "./AppSpelling";
 
 export default function MainRouter() {
   const [screen, setScreen] = useState("menu");
@@ -10,8 +10,8 @@ export default function MainRouter() {
   return (
     <>
       {screen === "menu" && <MainMenu onSelect={setScreen} />}
-      {screen === "spelling" && <AppSpelling goHome={goHome} />}
       {screen === "vocab" && <AppVocab goHome={goHome} />}
+      {screen === "spelling" && <AppSpelling goHome={goHome} />}
     </>
   );
 }
