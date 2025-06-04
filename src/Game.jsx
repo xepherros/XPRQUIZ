@@ -1,137 +1,121 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import words from './weekly_vocab_list.json';
 
-const synth = window.speechSynthesis;
-
 function speak(text) {
-  const exceptions = {
-    "IATA": "I A T A",
-    "ETA": "E T A",
-    "AWB": "A W B"
-  };
-  const spokenText = exceptions[text.toUpperCase()] || text;
-  const utterance = new SpeechSynthesisUtterance(spokenText);
-  utterance.lang = 'en-US';
-  synth.cancel();
-  synth.speak(utterance);
+  const exceptions = { IATA: "I A T A", AWB: "A W B", ETA: "E T A" };
+  const spoken = exceptions[text.toUpperCase()] || text;
+  const utter = new SpeechSynthesisUtterance(spoken);
+  utter.lang = 'en-US';
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utter);
 }
 
-function shuffle(array) {
-  return [...array].sort(() => Math.random() - 0.5);
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
-function Game({ week = "week_1", nickname = "Player" }) {
-  const [cards, setCards] = useState([]);
-  const [flipped, setFlipped] = useState([]);
-  const [matched, setMatched] = useState([]);
-  const [startTime, setStartTime] = useState(null);
-  const [finished, setFinished] = useState(false);
+export default function Game({ week, nickname }) {
+  const [terms, setTerms] = useState([]);
+  const [defs, setDefs] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState(null);
+  const [matchedPairs, setMatchedPairs] = useState([]);
   const [elapsed, setElapsed] = useState(0);
+  const [startTime, setStartTime] = useState(Date.now());
+  const [finished, setFinished] = useState(false);
 
   useEffect(() => {
-    const selected = words[week] || [];
-    const prepared = shuffle([
-      ...selected.map((item, i) => ({ id: i + "T", text: item.term, pair: item.definition })),
-      ...selected.map((item, i) => ({ id: i + "D", text: item.definition, pair: item.term }))
-    ]);
-    setCards(prepared);
+    const vocab = words[week] || [];
+    setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
+    setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
     setStartTime(Date.now());
   }, [week]);
 
   useEffect(() => {
-    let timer;
-    if (!finished) {
-      timer = setInterval(() => {
-        setElapsed(Math.floor((Date.now() - startTime) / 1000));
-      }, 1000);
-    } else {
-      clearInterval(timer);
-    }
+    const timer = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
     return () => clearInterval(timer);
-  }, [finished, startTime]);
+  }, [startTime]);
 
   useEffect(() => {
-    if (matched.length === cards.length && cards.length > 0) {
+    if (matchedPairs.length === 10) {
       setFinished(true);
       saveScore();
     }
-  }, [matched]);
-
-  const handleFlip = (index) => {
-    if (flipped.length === 2 || flipped.includes(index) || matched.includes(index)) return;
-    const newFlipped = [...flipped, index];
-    setFlipped(newFlipped);
-    speak(cards[index].text);
-    if (newFlipped.length === 2) {
-      const [a, b] = newFlipped;
-      if (cards[a].pair === cards[b].text) {
-        setTimeout(() => {
-          setMatched([...matched, a, b]);
-          setFlipped([]);
-        }, 600);
-      } else {
-        setTimeout(() => setFlipped([]), 800);
-      }
-    }
-  };
+  }, [matchedPairs]);
 
   const saveScore = () => {
     const key = `ranking_${week}`;
     const old = JSON.parse(localStorage.getItem(key) || "[]");
-    const newScore = { name: nickname, time: elapsed };
-    const updated = [...old, newScore].sort((a, b) => a.time - b.time).slice(0, 5);
+    const score = { name: nickname, time: elapsed };
+    const updated = [...old, score].sort((a, b) => a.time - b.time).slice(0, 5);
     localStorage.setItem(key, JSON.stringify(updated));
   };
 
+  const handleMatch = (def) => {
+    if (!selectedTerm) return;
+    speak(selectedTerm.text);
+    const isMatch = selectedTerm.pair === def.text;
+    if (isMatch) {
+      setMatchedPairs([...matchedPairs, selectedTerm.id]);
+    }
+    setSelectedTerm(null);
+  };
+
   return (
-    <div className="p-4 text-center font-sans">
+    <div className="min-h-screen p-6 bg-pastel font-sans text-center">
       <h1 className="text-xl font-bold mb-2">จับคู่คำศัพท์ - {week.toUpperCase()}</h1>
       <p className="mb-4">ชื่อ: {nickname} | เวลา: {elapsed}s</p>
-
-      <div className="grid grid-cols-5 gap-2 max-w-3xl mx-auto">
-        {cards.map((card, index) => {
-          const isFlipped = flipped.includes(index) || matched.includes(index);
-
-          return (
+      <div className="grid grid-cols-2 gap-6 max-w-5xl mx-auto">
+        {/* คำศัพท์ฝั่งซ้าย */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold mb-2">คำศัพท์</h2>
+          {terms.map((term) => (
             <motion.div
-              key={index}
-              layout
-              className={`rounded-xl p-4 h-24 flex items-center justify-center text-sm md:text-base font-medium border cursor-pointer perspective`}
-              onClick={() => handleFlip(index)}
-              initial={{ opacity: 0, rotateY: -90 }}
-              animate={{ opacity: 1, rotateY: 0 }}
-              transition={{ duration: 0.4 }}
-              whileHover={{ scale: 1.03 }}
-              style={{
-                backgroundColor: matched.includes(index)
-                  ? '#bbf7d0'
-                  : isFlipped
-                  ? '#ffffff'
-                  : '#cce4f6'
-              }}
+              key={term.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
+                ${selectedTerm?.id === term.id ? 'bg-yellow-200' :
+                  matchedPairs.includes(term.id) ? 'bg-green-200 text-green-900' : ''}
+              `}
+              onClick={() => setSelectedTerm(term)}
             >
-              {isFlipped ? card.text : "❓"}
+              {term.text}
             </motion.div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* คำแปลฝั่งขวา */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold mb-2">คำแปล</h2>
+          {defs.map((def) => {
+            const isMatched = matchedPairs.includes(def.id);
+            return (
+              <motion.div
+                key={def.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
+                  ${selectedTerm && selectedTerm.pair === def.text ? 'bg-blue-100' : ''}
+                  ${matchedPairs.includes(def.id) ? 'bg-green-200 text-green-900' : ''}
+                `}
+                onClick={() => handleMatch(def)}
+              >
+                {def.text}
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
 
       {finished && (
-        <AnimatePresence>
-          <motion.div
-            className="mt-6"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            <h2 className="text-lg font-semibold">🎉 จับคู่ครบแล้ว!</h2>
-            <p>ใช้เวลา: {elapsed} วินาที</p>
-          </motion.div>
-        </AnimatePresence>
+        <div className="mt-6">
+          <h2 className="text-lg font-bold text-green-600">🎉 จบเกม!</h2>
+          <p>คุณจับคู่คำศัพท์ครบใน {elapsed} วินาที</p>
+        </div>
       )}
     </div>
   );
 }
-
-export default Game;
