@@ -144,7 +144,16 @@ export default function Game({ week, nickname, goHome }) {
               onClick={() => {
                 const next = parseInt(week.split("_")[1]) + 1;
                 if (next <= 7) {
-                  window.location.href = `/?autoStart=true&week=week_${next}&name=${nickname}`;
+                  const newWeek = `week_${next}`;
+                  const vocab = words[newWeek] || [];
+            
+                  setFinished(false);
+                  setElapsed(0);
+                  setMatchedPairs([]);
+                  setSelectedTerm(null);
+                  setTerms(shuffle(vocab.map((v) => ({ text: v.term, pair: v.definition }))));
+                  setDefs(shuffle(vocab.map((v) => ({ text: v.definition, pair: v.term }))));
+                  setStartTime(Date.now());
                 } else {
                   alert("ไม่มีสัปดาห์ถัดไปแล้ว");
                 }
