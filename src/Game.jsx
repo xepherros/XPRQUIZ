@@ -119,7 +119,8 @@ export default function Game({ week, nickname, goHome }) {
         <div className="mt-8 space-y-4">
           <h2 className="text-xl font-bold text-green-600">🎉 จบเกมแล้ว!</h2>
           <p className="text-md">คุณใช้เวลา <strong>{elapsed} วินาที</strong></p>
-
+      )}
+          
           <div className="flex flex-wrap justify-center gap-4 mt-4">
             <button
               onClick={() => {
@@ -180,7 +181,7 @@ export default function Game({ week, nickname, goHome }) {
             </button>
           </div>
         </div>
-      )}
+      
     </div>
   );
 }
