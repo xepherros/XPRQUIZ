@@ -22,7 +22,7 @@ export default function Game({ week, nickname, goHome }) {
   const [terms, setTerms] = useState([]);
   const [defs, setDefs] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState(null);
-  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [matchedPairs, setMatchedPairs] = useState([]); // will contain term ids
   const [elapsed, setElapsed] = useState(0);
   const [startTime, setStartTime] = useState(Date.now());
   const [finished, setFinished] = useState(false);
@@ -33,6 +33,10 @@ export default function Game({ week, nickname, goHome }) {
     setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
     setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
     setStartTime(Date.now());
+    setElapsed(0);
+    setMatchedPairs([]);
+    setSelectedTerm(null);
+    setFinished(false);
   }, [currentWeek]);
 
   useEffect(() => {
@@ -44,21 +48,20 @@ export default function Game({ week, nickname, goHome }) {
   }, [finished, startTime]);
 
   useEffect(() => {
-    if (matchedPairs.length === 10) {
+    if (terms.length > 0 && matchedPairs.length === terms.length) {
       setFinished(true);
       saveScore();
     }
-  }, [matchedPairs]);
+  }, [matchedPairs, terms.length]);
 
   const handleMatch = (def) => {
     if (!selectedTerm) return;
-    const isMatch = selectedTerm.pair === def.text;
+    const isMatch = selectedTerm.pair === def.text && selectedTerm.id === def.id;
     if (isMatch) {
-      setMatchedPairs([...matchedPairs, selectedTerm.text]);
+      setMatchedPairs([...matchedPairs, selectedTerm.id]);
     }
     setSelectedTerm(null);
   };
-
 
   const saveScore = () => {
     const key = `ranking_${currentWeek}`;
@@ -66,6 +69,35 @@ export default function Game({ week, nickname, goHome }) {
     const score = { name: nickname, time: elapsed };
     const updated = [...old, score].sort((a, b) => a.time - b.time).slice(0, 5);
     localStorage.setItem(key, JSON.stringify(updated));
+  };
+
+  const restart = () => {
+    const vocab = words[currentWeek] || [];
+    setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
+    setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
+    setMatchedPairs([]);
+    setSelectedTerm(null);
+    setFinished(false);
+    setElapsed(0);
+    setStartTime(Date.now());
+  };
+
+  const goNextWeek = () => {
+    const next = parseInt(currentWeek.split("_")[1]) + 1;
+    if (next <= 7) {
+      const newWeek = `week_${next}`;
+      const vocab = words[newWeek] || [];
+      setCurrentWeek(newWeek);
+      setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
+      setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
+      setMatchedPairs([]);
+      setSelectedTerm(null);
+      setFinished(false);
+      setElapsed(0);
+      setStartTime(Date.now());
+    } else {
+      alert("ไม่มีสัปดาห์ถัดไปแล้ว");
+    }
   };
 
   return (
@@ -78,20 +110,21 @@ export default function Game({ week, nickname, goHome }) {
           <h2 className="text-lg font-semibold mb-2">คำศัพท์</h2>
           {terms.map((term) => (
             <motion.div
-              key={term.text}
+              key={term.id}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-              ${matchedPairs.includes(term.text)
+              ${matchedPairs.includes(term.id)
                 ? 'bg-green-500 text-white font-bold'
-                : selectedTerm?.text === term.text
+                : selectedTerm?.id === term.id
                   ? 'bg-yellow-200'
                   : ''}
               `}
-
               onClick={() => {
-                speak(term.text);
-                setSelectedTerm(term);
+                if (!matchedPairs.includes(term.id)) {
+                  speak(term.text);
+                  setSelectedTerm(term);
+                }
               }}
             >
               {term.text}
@@ -104,18 +137,21 @@ export default function Game({ week, nickname, goHome }) {
           <h2 className="text-lg font-semibold mb-2">คำแปล</h2>
           {defs.map((def) => (
             <motion.div
-              key={def.text}
+              key={def.id}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-                ${matchedPairs.includes(def.pair)
+                ${matchedPairs.includes(def.id)
                   ? 'bg-green-500 text-white font-bold'
-                  : selectedTerm?.pair === def.text
+                  : selectedTerm?.pair === def.text && selectedTerm?.id === def.id
                     ? 'bg-blue-100'
                     : ''}
               `}
-
-              onClick={() => handleMatch(def)}
+              onClick={() => {
+                if (!matchedPairs.includes(def.id)) {
+                  handleMatch(def);
+                }
+              }}
             >
               {def.text}
             </motion.div>
@@ -130,66 +166,35 @@ export default function Game({ week, nickname, goHome }) {
         </div>  
       )}
           
-          <div className="flex flex-wrap justify-center gap-4 mt-4">
-            <button
-              onClick={() => {
-                setTerms([]);
-                setDefs([]);
-                setMatchedPairs([]);
-                setSelectedTerm(null);
-                setFinished(false);
-                setElapsed(0);
-                setStartTime(Date.now());
+      <div className="flex flex-wrap justify-center gap-4 mt-4">
+        <button
+          onClick={restart}
+          className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
+        >
+          🔄 เริ่มใหม่
+        </button>
 
-                const vocab = words[currentWeek] || [];
-                setTerms(shuffle(vocab.map((v) => ({ text: v.term, pair: v.definition }))));
-                setDefs(shuffle(vocab.map((v) => ({ text: v.definition, pair: v.term }))));
-              }}
+        <button
+          onClick={goNextWeek}
+          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+        >
+          ⏭️ สัปดาห์ถัดไป
+        </button>
 
-              className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
-            >
-              🔄 เริ่มใหม่
-            </button>
+        <button
+          onClick={() => alert("กำลังพัฒนา: ตารางอันดับ")}
+          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
+        >
+          🏆 ดูอันดับ
+        </button>
 
-            <button
-              onClick={() => {
-                const next = parseInt(currentWeek.split("_")[1]) + 1;
-                if (next <= 7) {
-                  const newWeek = `week_${next}`;
-                  const vocab = words[newWeek] || [];
-
-                  setCurrentWeek(newWeek);
-                  setFinished(false);
-                  setElapsed(0);
-                  setMatchedPairs([]);
-                  setSelectedTerm(null);
-                  setTerms(shuffle(vocab.map((v) => ({ text: v.term, pair: v.definition }))));
-                  setDefs(shuffle(vocab.map((v) => ({ text: v.definition, pair: v.term }))));
-                  setStartTime(Date.now());
-                } else {
-                  alert("ไม่มีสัปดาห์ถัดไปแล้ว");
-                }
-              }}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
-            >
-              ⏭️ สัปดาห์ถัดไป
-            </button>
-
-            <button
-              onClick={() => alert("กำลังพัฒนา: ตารางอันดับ")}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
-            >
-              🏆 ดูอันดับ
-            </button>
-
-            <button
-              onClick={goHome}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
-            >
-              🏠 กลับหน้าหลัก
-            </button>
-          </div>
-      
+        <button
+          onClick={goHome}
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+        >
+          🏠 กลับหน้าหลัก
+        </button>
+      </div>
     </div>
   );
 }
