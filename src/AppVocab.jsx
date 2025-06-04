@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Game from './Game';
 
 export default function AppVocab({ goHome }) {
-  const AppVocab = () => {
   const [nickname, setNickname] = useState('');
   const [week, setWeek] = useState('');
   const [start, setStart] = useState(false);
@@ -15,7 +14,6 @@ export default function AppVocab({ goHome }) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-pastel px-4">
-
       {!start ? (
         <div className="bg-white p-6 rounded-2xl shadow max-w-md w-full space-y-4">
           <h1 className="text-2xl font-bold text-center">เริ่มเกมจับคู่คำศัพท์</h1>
@@ -43,8 +41,16 @@ export default function AppVocab({ goHome }) {
           </button>
         </div>
       ) : (
-        <Game nickname={nickname} week={week} />
+        <div className="w-full">
+          <Game nickname={nickname} week={week} />
+          <button
+            className="mt-4 bg-pink-500 text-white px-4 py-2 rounded w-full hover:bg-pink-600 transition"
+            onClick={goHome}
+          >
+            กลับหน้าหลัก
+          </button>
+        </div>
       )}
     </div>
   );
-};
+}
