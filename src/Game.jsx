@@ -22,7 +22,7 @@ export default function Game({ week, nickname, goHome }) {
   const [terms, setTerms] = useState([]);
   const [defs, setDefs] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState(null);
-  const [matchedPairs, setMatchedPairs] = useState([]); // will contain term ids
+  const [matchedPairs, setMatchedPairs] = useState([]); // {termId, defId}
   const [elapsed, setElapsed] = useState(0);
   const [startTime, setStartTime] = useState(Date.now());
   const [finished, setFinished] = useState(false);
@@ -30,8 +30,8 @@ export default function Game({ week, nickname, goHome }) {
 
   useEffect(() => {
     const vocab = words[currentWeek] || [];
-    setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
-    setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
+    setTerms(shuffle(vocab.map((v, i) => ({ id: `t${i}`, text: v.term, pair: v.definition }))));
+    setDefs(shuffle(vocab.map((v, i) => ({ id: `d${i}`, text: v.definition, pair: v.term }))));
     setStartTime(Date.now());
     setElapsed(0);
     setMatchedPairs([]);
@@ -56,12 +56,18 @@ export default function Game({ week, nickname, goHome }) {
 
   const handleMatch = (def) => {
     if (!selectedTerm) return;
-    const isMatch = selectedTerm.pair === def.text && selectedTerm.id === def.id;
+    const isMatch = selectedTerm.pair === def.text;
     if (isMatch) {
-      setMatchedPairs([...matchedPairs, selectedTerm.id]);
+      setMatchedPairs([...matchedPairs, { termId: selectedTerm.id, defId: def.id }]);
     }
     setSelectedTerm(null);
   };
+
+  const isTermMatched = (termId) =>
+    matchedPairs.some((pair) => pair.termId === termId);
+
+  const isDefMatched = (defId) =>
+    matchedPairs.some((pair) => pair.defId === defId);
 
   const saveScore = () => {
     const key = `ranking_${currentWeek}`;
@@ -73,8 +79,8 @@ export default function Game({ week, nickname, goHome }) {
 
   const restart = () => {
     const vocab = words[currentWeek] || [];
-    setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
-    setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
+    setTerms(shuffle(vocab.map((v, i) => ({ id: `t${i}`, text: v.term, pair: v.definition }))));
+    setDefs(shuffle(vocab.map((v, i) => ({ id: `d${i}`, text: v.definition, pair: v.term }))));
     setMatchedPairs([]);
     setSelectedTerm(null);
     setFinished(false);
@@ -88,8 +94,8 @@ export default function Game({ week, nickname, goHome }) {
       const newWeek = `week_${next}`;
       const vocab = words[newWeek] || [];
       setCurrentWeek(newWeek);
-      setTerms(shuffle(vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition }))));
-      setDefs(shuffle(vocab.map((v, i) => ({ id: i, text: v.definition, pair: v.term }))));
+      setTerms(shuffle(vocab.map((v, i) => ({ id: `t${i}`, text: v.term, pair: v.definition }))));
+      setDefs(shuffle(vocab.map((v, i) => ({ id: `d${i}`, text: v.definition, pair: v.term }))));
       setMatchedPairs([]);
       setSelectedTerm(null);
       setFinished(false);
@@ -114,14 +120,14 @@ export default function Game({ week, nickname, goHome }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-              ${matchedPairs.includes(term.id)
+              ${isTermMatched(term.id)
                 ? 'bg-green-500 text-white font-bold'
                 : selectedTerm?.id === term.id
                   ? 'bg-yellow-200'
                   : ''}
               `}
               onClick={() => {
-                if (!matchedPairs.includes(term.id)) {
+                if (!isTermMatched(term.id)) {
                   speak(term.text);
                   setSelectedTerm(term);
                 }
@@ -141,14 +147,14 @@ export default function Game({ week, nickname, goHome }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-                ${matchedPairs.includes(def.id)
+                ${isDefMatched(def.id)
                   ? 'bg-green-500 text-white font-bold'
-                  : selectedTerm?.pair === def.text && selectedTerm?.id === def.id
+                  : selectedTerm?.pair === def.text && !isDefMatched(def.id)
                     ? 'bg-blue-100'
                     : ''}
               `}
               onClick={() => {
-                if (!matchedPairs.includes(def.id)) {
+                if (!isDefMatched(def.id)) {
                   handleMatch(def);
                 }
               }}
