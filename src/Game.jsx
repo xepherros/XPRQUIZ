@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import words from './weekly_vocab_list.json';
 
 const synth = window.speechSynthesis;
@@ -87,27 +88,47 @@ function Game({ week = "week_1", nickname = "Player" }) {
     <div className="p-4 text-center font-sans">
       <h1 className="text-xl font-bold mb-2">จับคู่คำศัพท์ - {week.toUpperCase()}</h1>
       <p className="mb-4">ชื่อ: {nickname} | เวลา: {elapsed}s</p>
+
       <div className="grid grid-cols-5 gap-2 max-w-3xl mx-auto">
         {cards.map((card, index) => {
           const isFlipped = flipped.includes(index) || matched.includes(index);
+
           return (
-            <div
+            <motion.div
               key={index}
-              className={`rounded-xl p-4 h-24 flex items-center justify-center text-sm md:text-base font-medium border cursor-pointer transition duration-300
-                ${matched.includes(index) ? "bg-green-200 text-green-900" : isFlipped ? "bg-white shadow" : "bg-blue-100 hover:bg-blue-200"}
-              `}
+              layout
+              className={`rounded-xl p-4 h-24 flex items-center justify-center text-sm md:text-base font-medium border cursor-pointer perspective`}
               onClick={() => handleFlip(index)}
+              initial={{ opacity: 0, rotateY: -90 }}
+              animate={{ opacity: 1, rotateY: 0 }}
+              transition={{ duration: 0.4 }}
+              whileHover={{ scale: 1.03 }}
+              style={{
+                backgroundColor: matched.includes(index)
+                  ? '#bbf7d0'
+                  : isFlipped
+                  ? '#ffffff'
+                  : '#cce4f6'
+              }}
             >
               {isFlipped ? card.text : "❓"}
-            </div>
+            </motion.div>
           );
         })}
       </div>
+
       {finished && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold">🎉 จับคู่ครบแล้ว!</h2>
-          <p>ใช้เวลา: {elapsed} วินาที</p>
-        </div>
+        <AnimatePresence>
+          <motion.div
+            className="mt-6"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            <h2 className="text-lg font-semibold">🎉 จับคู่ครบแล้ว!</h2>
+            <p>ใช้เวลา: {elapsed} วินาที</p>
+          </motion.div>
+        </AnimatePresence>
       )}
     </div>
   );
