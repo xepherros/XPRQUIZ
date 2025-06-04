@@ -12,11 +12,11 @@ function speak(text, lang = 'auto') {
 
   // ข้อยกเว้นภาษาอังกฤษตัวย่อ (แทนที่ในประโยค)
   const exceptions = {
-    IATA: "I. A. T. A.",
-    ETA: "E. T. A.",
-    AWB: "A. W. B.",
-    FCL: "F. C. L.",
-    LCL: "L. C. L."
+    IATA: "I A T A",
+    ETA: "E T A",
+    AWB: "A W B",
+    FCL: "F C L",
+    LCL: "L C L"
   };
 
   // ใช้ regex แทนที่ทุกคำย่อในข้อความ
