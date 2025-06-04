@@ -119,6 +119,7 @@ export default function Game({ week, nickname, goHome }) {
         <div className="mt-8 space-y-4">
           <h2 className="text-xl font-bold text-green-600">🎉 จบเกมแล้ว!</h2>
           <p className="text-md">คุณใช้เวลา <strong>{elapsed} วินาที</strong></p>
+        </div>  
       )}
           
           <div className="flex flex-wrap justify-center gap-4 mt-4">
@@ -149,7 +150,7 @@ export default function Game({ week, nickname, goHome }) {
                   const newWeek = `week_${next}`;
                   const vocab = words[newWeek] || [];
 
-                  setcurrentWeek(newWeek);
+                  setCurrentWeek(newWeek);
                   setFinished(false);
                   setElapsed(0);
                   setMatchedPairs([]);
@@ -180,7 +181,6 @@ export default function Game({ week, nickname, goHome }) {
               🏠 กลับหน้าหลัก
             </button>
           </div>
-        </div>
       
     </div>
   );
