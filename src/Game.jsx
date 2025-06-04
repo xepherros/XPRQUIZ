@@ -82,11 +82,11 @@ export default function Game({ week, nickname, goHome }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-                ${matchedPairs.includes(term.text)
-                  ? 'bg-green-500 text-white font-bold'
-                  : selectedTerm?.id === term.id
-                    ? 'bg-yellow-200'
-                    : ''}
+              ${matchedPairs.includes(term.text)
+                ? 'bg-green-500 text-white font-bold'
+                : selectedTerm?.text === term.text
+                  ? 'bg-yellow-200'
+                  : ''}
               `}
 
               onClick={() => {
