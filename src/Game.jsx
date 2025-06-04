@@ -8,7 +8,7 @@ function speak(text) {
     FCL: "F C L", LCL: "L C L"
   };
   const spoken = exceptions[text.toUpperCase()] || text;
-  const utter = new SpeechSynthesisUtterance(spoken);
+  const utter = new window.SpeechSynthesisUtterance(spoken);
   utter.lang = 'en-US';
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utter);
@@ -22,8 +22,8 @@ export default function Game({ week, nickname, goHome }) {
   const [terms, setTerms] = useState([]);
   const [defs, setDefs] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState(null);
-  const [matchedIds, setMatchedIds] = useState([]); // array of unique id
-  const [wrongPair, setWrongPair] = useState(null);  // { termId, defId }
+  const [matchedIds, setMatchedIds] = useState([]);
+  const [wrongPair, setWrongPair] = useState(null); // { termId, defId }
   const [elapsed, setElapsed] = useState(0);
   const [startTime, setStartTime] = useState(Date.now());
   const [finished, setFinished] = useState(false);
@@ -72,7 +72,6 @@ export default function Game({ week, nickname, goHome }) {
       setWrongPair(null);
     } else {
       setWrongPair({ termId: selectedTerm.id, defId: def.id });
-      // Reset wrong color after 700ms and allow user to select again
       setTimeout(() => {
         setWrongPair(null);
         setSelectedTerm(null);
@@ -129,66 +128,65 @@ export default function Game({ week, nickname, goHome }) {
         {/* ฝั่งซ้าย: คำศัพท์ */}
         <div className="space-y-2">
           <h2 className="text-lg font-semibold mb-2">คำศัพท์</h2>
-          {terms.map((term) => (
-            <motion.div
-              key={term.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-                ${matchedIds.includes(term.id)
-                  ? 'bg-green-500 text-white font-bold'
-                  : (wrongPair && wrongPair.termId === term.id)
-                    ? 'bg-red-400 text-white'
-                    : ''}
-              `}
-              onClick={() => {
-                // เลือก term ได้เฉพาะตอนที่ยังไม่ได้ matched และยังไม่อยู่ในสถานะผิด
-                if (!matchedIds.includes(term.id) && !wrongPair) {
-                  speak(term.text);
-                  setSelectedTerm(term);
-                }
-              }}
-            >
-              {term.text}
-            </motion.div>
-          ))}
+          {terms.map((term) => {
+            let colorClass = "bg-white";
+            if (matchedIds.includes(term.id)) {
+              colorClass = "bg-green-500 text-white font-bold";
+            } else if (wrongPair && wrongPair.termId === term.id) {
+              colorClass = "bg-red-400 text-white";
+            }
+            return (
+              <motion.div
+                key={term.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
+                onClick={() => {
+                  if (!matchedIds.includes(term.id) && !wrongPair) {
+                    speak(term.text);
+                    setSelectedTerm(term);
+                  }
+                }}
+              >
+                {term.text}
+              </motion.div>
+            );
+          })}
         </div>
-
         {/* ฝั่งขวา: คำแปล */}
         <div className="space-y-2">
           <h2 className="text-lg font-semibold mb-2">คำแปล</h2>
-          {defs.map((def) => (
-            <motion.div
-              key={def.id}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-                ${matchedIds.includes(def.id)
-                  ? 'bg-green-500 text-white font-bold'
-                  : (wrongPair && wrongPair.defId === def.id)
-                    ? 'bg-red-400 text-white'
-                    : ''}
-              `}
-              onClick={() => {
-                // คลิก def ได้เฉพาะกรณีเลือก term อยู่, def ยังไม่ matched, และยังไม่อยู่ในสถานะผิด
-                if (selectedTerm && !matchedIds.includes(def.id) && !wrongPair) {
-                  handleMatch(def);
-                }
-              }}
-            >
-              {def.text}
-            </motion.div>
-          ))}
+          {defs.map((def) => {
+            let colorClass = "bg-white";
+            if (matchedIds.includes(def.id)) {
+              colorClass = "bg-green-500 text-white font-bold";
+            } else if (wrongPair && wrongPair.defId === def.id) {
+              colorClass = "bg-red-400 text-white";
+            }
+            return (
+              <motion.div
+                key={def.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
+                onClick={() => {
+                  if (selectedTerm && !matchedIds.includes(def.id) && !wrongPair) {
+                    handleMatch(def);
+                  }
+                }}
+              >
+                {def.text}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
-
       {finished && (
         <div className="mt-8 space-y-4">
           <h2 className="text-xl font-bold text-green-600">🎉 จบเกมแล้ว!</h2>
           <p className="text-md">คุณใช้เวลา <strong>{elapsed} วินาที</strong></p>
-        </div>  
+        </div>
       )}
-          
       <div className="flex flex-wrap justify-center gap-4 mt-4">
         <button
           onClick={restart}
@@ -196,21 +194,18 @@ export default function Game({ week, nickname, goHome }) {
         >
           🔄 เริ่มใหม่
         </button>
-
         <button
           onClick={goNextWeek}
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
         >
           ⏭️ สัปดาห์ถัดไป
         </button>
-
         <button
           onClick={() => alert("กำลังพัฒนา  :  ตาราง อันดับ")}
           className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
         >
           🏆 ดูอันดับ
         </button>
-
         <button
           onClick={goHome}
           className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
