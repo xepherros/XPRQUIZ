@@ -1,18 +1,17 @@
 import React, { useState } from "react";
 import MainMenu from "./MainMenu";
-import AppVocab from "./AppVocab";
 import AppSpelling from "./AppSpelling";
+import AppVocab from "./AppVocab"; // ต้อง import ทุกคอมโพเนนต์ที่ใช้
 
 export default function MainRouter() {
-  const [screen, setScreen] = useState("mainmenu");
-
-  const goHome = () => setScreen("mainmenu");
+  const [screen, setScreen] = useState("menu");
+  const goHome = () => setScreen("menu");
 
   return (
     <>
-      {screen === "mainmenu" && <MainMenu onSelect={setScreen} />}
-      {screen === "vocab" && <AppVocab goHome={goHome} />}
+      {screen === "menu" && <MainMenu onSelect={setScreen} />}
       {screen === "spelling" && <AppSpelling goHome={goHome} />}
+      {screen === "vocab" && <AppVocab goHome={goHome} />}
     </>
   );
 }
