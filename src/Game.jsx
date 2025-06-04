@@ -82,10 +82,13 @@ export default function Game({ week, nickname, goHome }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-                ${selectedTerm?.text === term.text ? 'bg-yellow-200' : ''}
-                ${matchedPairs.includes(term.text) ? 'bg-green-500 text-white font-bold' : ''}
-
+                ${matchedPairs.includes(term.text)
+                  ? 'bg-green-500 text-white font-bold'
+                  : selectedTerm?.text === term.text
+                    ? 'bg-yellow-300'
+                    : ''}
               `}
+
               onClick={() => {
                 speak(term.text);
                 setSelectedTerm(term);
@@ -105,10 +108,13 @@ export default function Game({ week, nickname, goHome }) {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
-                ${selectedTerm && selectedTerm.pair === def.text ? 'bg-blue-100' : ''}
-                ${matchedPairs.includes(def.pair) ? 'bg-green-500 text-white font-bold' : ''}
-
+                ${matchedPairs.includes(def.pair)
+                  ? 'bg-green-500 text-white font-bold'
+                  : selectedTerm?.pair === def.text
+                    ? 'bg-blue-100'
+                    : ''}
               `}
+
               onClick={() => handleMatch(def)}
             >
               {def.text}
