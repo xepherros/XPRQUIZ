@@ -8,10 +8,10 @@ export default function MainRouter() {
   const goHome = () => setScreen("menu");
 
   return (
-    <>
+    <div>
       {screen === "menu" && <MainMenu onSelect={setScreen} />}
       {screen === "spelling" && <AppSpelling goHome={goHome} />}
       {screen === "vocab" && <AppVocab goHome={goHome} />}
-    </>
+    </div>
   );
 }
