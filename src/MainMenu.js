@@ -1,6 +1,5 @@
 import React from "react";
 
-// ปุ่มเลือกเกม
 export default function MainMenu({ onSelect }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-pink-200 to-blue-200">
