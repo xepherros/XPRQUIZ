@@ -216,7 +216,20 @@ export default function Game({ week, nickname, goHome }) {
   // === ฟังก์ชันสำหรับปุ่ม "ดูอันดับ" ===
   const handleShowLeaderboard = async () => {
     const data = await fetchLeaderboard(currentWeek);
-    setLeaderboard(data);
+
+    // กรองชื่อซ้ำ: เอาเวลาน้อยที่สุดของแต่ละชื่อเท่านั้น
+    const unique = {};
+    data.forEach(item => {
+      if (
+        !unique[item.name] ||
+        Number(item.time) < Number(unique[item.name].time)
+      ) {
+        unique[item.name] = item;
+      }
+    });
+    // แปลงกลับเป็น array + sort เวลาน้อยสุดก่อน
+    const filtered = Object.values(unique).sort((a, b) => Number(a.time) - Number(b.time));
+    setLeaderboard(filtered.slice(0, 10)); // Top 10
     setShowLB(true);
   };
 
