@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import words from './weekly_vocab_list.json';
 
+// ========== เพิ่ม URL Google Apps Script ==========
+const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwgoLCQOBRQccg3FrLLg76wERwRHzAD2L4QBSMJGMroWSBHuOz00YPZLOZ8eCK3M2iaQw/exec";
+// ===================================================
+
 function speak(text, lang = 'auto') {
   let detectLang = lang;
   if (lang === 'auto') {
@@ -9,8 +13,6 @@ function speak(text, lang = 'auto') {
     const thCount = (text.match(/[\u0E00-\u0E7F]/g) || []).length;
     detectLang = enCount > thCount ? 'en-US' : 'th-TH';
   }
-
-  // ข้อยกเว้นภาษาอังกฤษตัวย่อ (แทนที่ในประโยค)
   const exceptions = {
     IATA: "I A T A",
     ETA: "E T A",
@@ -18,14 +20,11 @@ function speak(text, lang = 'auto') {
     FCL: "F C L",
     LCL: "L C L"
   };
-
-  // ใช้ regex แทนที่ทุกคำย่อในข้อความ
   let spoken = text;
   Object.keys(exceptions).forEach(key => {
     const reg = new RegExp(`\\b${key}\\b`, "g");
     spoken = spoken.replace(reg, exceptions[key]);
   });
-
   const utter = new window.SpeechSynthesisUtterance(spoken);
   utter.lang = detectLang;
   window.speechSynthesis.cancel();
@@ -56,6 +55,10 @@ export default function Game({ week, nickname, goHome }) {
   const [startTime, setStartTime] = useState(Date.now());
   const [finished, setFinished] = useState(false);
   const [currentWeek, setCurrentWeek] = useState(week);
+
+  // เพิ่มสำหรับ leaderboard
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [showLB, setShowLB] = useState(false);
 
   function generateTermDef(vocab) {
     return {
@@ -91,25 +94,23 @@ export default function Game({ week, nickname, goHome }) {
       playSound(winSound);
       saveScore();
     }
+    // eslint-disable-next-line
   }, [matchedIds, terms.length]);
 
   const handleSelect = (type, item) => {
     if (matchedIds.includes(item.id) || (wrongPair && ((type === 'term' && wrongPair.termId === item.id) || (type === 'def' && wrongPair.defId === item.id)))) {
       return;
     }
-    // ถ้า selection ยังไม่มี ให้เลือกก่อน
     if (!selection) {
       speak(item.text, 'auto');
       setSelection({ type, item });
       return;
     }
-    // ถ้าเลือกอันเดิม หรือคนละฝั่ง
     if (selection.type === type) {
       speak(item.text, 'auto');
       setSelection({ type, item });
       return;
     }
-    // ถ้าเลือก term กับ def แล้ว
     const term = type === 'term' ? item : selection.item;
     const def = type === 'def' ? item : selection.item;
     if (term.id === def.id) {
@@ -127,12 +128,33 @@ export default function Game({ week, nickname, goHome }) {
     }
   };
 
+  // === ฟังก์ชันบันทึกคะแนนขึ้น Google Sheet ===
+  async function saveScoreOnline({ name, time, week }) {
+    try {
+      await fetch(SHEET_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ name, time, week }),
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (err) {
+      // อาจแจ้งเตือนหรือ log error
+    }
+  }
+
+  // === ฟังก์ชันดึงอันดับจาก Google Sheet ===
+  async function fetchLeaderboard(week) {
+    try {
+      const res = await fetch(`${SHEET_API_URL}?week=${encodeURIComponent(week)}`);
+      return await res.json();
+    } catch (err) {
+      return [];
+    }
+  }
+
+  // === แก้ saveScore ให้บันทึกขึ้น Google Sheet ===
   const saveScore = () => {
-    const key = `ranking_${currentWeek}`;
-    const old = JSON.parse(localStorage.getItem(key) || "[]");
-    const score = { name: nickname, time: elapsed };
-    const updated = [...old, score].sort((a, b) => a.time - b.time).slice(0, 5);
-    localStorage.setItem(key, JSON.stringify(updated));
+    // ส่งออนไลน์แทน localStorage
+    saveScoreOnline({ name: nickname, time: elapsed, week: currentWeek });
   };
 
   const restart = () => {
@@ -146,6 +168,7 @@ export default function Game({ week, nickname, goHome }) {
     setElapsed(0);
     setStartTime(Date.now());
     setWrongPair(null);
+    setShowLB(false);
   };
 
   const goPrevWeek = () => {
@@ -163,11 +186,12 @@ export default function Game({ week, nickname, goHome }) {
       setElapsed(0);
       setStartTime(Date.now());
       setWrongPair(null);
+      setShowLB(false);
     } else {
       alert("ไม่มีสัปดาห์ก่อนหน้าแล้ว");
     }
   };
-  
+
   const goNextWeek = () => {
     const next = parseInt(currentWeek.split("_")[1]) + 1;
     if (next <= 7) {
@@ -183,9 +207,17 @@ export default function Game({ week, nickname, goHome }) {
       setElapsed(0);
       setStartTime(Date.now());
       setWrongPair(null);
+      setShowLB(false);
     } else {
       alert("ไม่มีสัปดาห์ถัดไปแล้ว");
     }
+  };
+
+  // === ฟังก์ชันสำหรับปุ่ม "ดูอันดับ" ===
+  const handleShowLeaderboard = async () => {
+    const data = await fetchLeaderboard(currentWeek);
+    setLeaderboard(data);
+    setShowLB(true);
   };
 
   return (
@@ -244,12 +276,38 @@ export default function Game({ week, nickname, goHome }) {
           })}
         </div>
       </div>
+
+      {/* แสดงอันดับ (Leaderboard) */}
+      {showLB && (
+        <div className="mt-8 space-y-2 max-w-md mx-auto bg-white rounded-xl shadow p-4 border">
+          <h2 className="text-lg font-bold text-purple-700 mb-2">🏆 อันดับ Top 10 ({currentWeek.toUpperCase()})</h2>
+          {leaderboard.length === 0 ? (
+            <p>ยังไม่มีคะแนนในสัปดาห์นี้</p>
+          ) : (
+            <ol className="text-left pl-6">
+              {leaderboard.map((item, idx) => (
+                <li key={idx} className="mb-1">
+                  <span className="font-semibold">{idx + 1}.</span> {item.name} <span className="text-gray-500">({item.time} วินาที)</span>
+                </li>
+              ))}
+            </ol>
+          )}
+          <button
+            onClick={() => setShowLB(false)}
+            className="mt-2 bg-gray-300 hover:bg-gray-400 text-black px-3 py-1 rounded"
+          >
+            ปิดอันดับ
+          </button>
+        </div>
+      )}
+
       {finished && (
         <div className="mt-8 space-y-4">
           <h2 className="text-xl font-bold text-green-600">🎉 จบเกมแล้ว!</h2>
           <p className="text-md">คุณใช้เวลา <strong>{elapsed} วินาที</strong></p>
         </div>
       )}
+
       <div className="flex flex-wrap justify-center gap-4 mt-4">
         <button
           onClick={restart}
@@ -270,7 +328,7 @@ export default function Game({ week, nickname, goHome }) {
           ⏭️ สัปดาห์ถัดไป
         </button>
         <button
-          onClick={() => alert("กำลังพัฒนา  :  ตาราง อันดับ")}
+          onClick={handleShowLeaderboard}
           className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
         >
           🏆 ดูอันดับ
