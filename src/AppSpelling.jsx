@@ -1,5 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 
+// === เพิ่มเสียง ===
+const correctSound = '/sounds/Correct.mp3';
+const wrongSound = '/sounds/Wrong.wav';
+const winSound = '/sounds/Win.wav';
+
+function playSound(src) {
+  const audio = new window.Audio(src);
+  audio.currentTime = 0;
+  audio.play();
+}
+
 const words = [
   "Agent IATA code",
   "Air waybill",
@@ -95,9 +106,11 @@ export default function AppSpelling({ goHome }) {
       setResult("✅ Correct!");
       setResultColor("green");
       setDisableNext(false);
+      playSound(correctSound);
     } else {
       setResult("❌ Try again!");
       setResultColor("red");
+      playSound(wrongSound);
     }
   };
 
@@ -105,9 +118,11 @@ export default function AppSpelling({ goHome }) {
   const nextWord = () => {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
+      // ไม่มีเสียง win ระหว่างแต่ละคำ
     } else {
       setResult("🎉 You've completed all words!");
       setResultColor("blue");
+      playSound(winSound);
     }
   };
 
