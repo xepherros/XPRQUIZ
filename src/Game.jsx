@@ -84,6 +84,8 @@ export default function Game({ week, nickname, goHome }) {
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
                 ${matchedPairs.includes(term.text)
                   ? 'bg-green-500 text-white font-bold'
+                  : selectedTerm?.id === term.id
+                    ? 'bg-yellow-200'
                     : ''}
               `}
 
@@ -108,6 +110,8 @@ export default function Game({ week, nickname, goHome }) {
               className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
                 ${matchedPairs.includes(def.pair)
                   ? 'bg-green-500 text-white font-bold'
+                  : selectedTerm?.pair === def.text
+                    ? 'bg-blue-100'
                     : ''}
               `}
 
