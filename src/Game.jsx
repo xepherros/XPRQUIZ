@@ -147,7 +147,8 @@ export default function Game({ week, nickname, goHome }) {
                 if (next <= 7) {
                   const newWeek = `week_${next}`;
                   const vocab = words[newWeek] || [];
-            
+
+                  setcurrentWeek(newWeek);
                   setFinished(false);
                   setElapsed(0);
                   setMatchedPairs([]);
