@@ -67,7 +67,7 @@ export default function Game({ week, nickname, goHome }) {
     localStorage.setItem(key, JSON.stringify(updated));
   };
 
-    return (
+  return (
     <div className="min-h-screen p-6 bg-pastel font-sans text-center">
       <h1 className="text-xl font-bold mb-2">จับคู่คำศัพท์ - {week.toUpperCase()}</h1>
       <p className="mb-4">ชื่อ: {nickname} | เวลา: {elapsed}s</p>
@@ -77,17 +77,21 @@ export default function Game({ week, nickname, goHome }) {
           <h2 className="text-lg font-semibold mb-2">คำศัพท์</h2>
           {terms.map((term) => (
             <motion.div
-            key={term.text}
-            ...
-              className={`... ${
-                selectedTerm?.text === term.text ? 'bg-yellow-200' :
-                matchedPairs.includes(term.text) ? 'bg-green-200 text-green-900' : ''
-              }`}
-              ...
+              key={term.text}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
+                ${selectedTerm?.text === term.text ? 'bg-yellow-200' :
+                  matchedPairs.includes(term.text) ? 'bg-green-200 text-green-900' : ''}
+              `}
+              onClick={() => {
+                speak(term.text);
+                setSelectedTerm(term);
+              }}
             >
               {term.text}
             </motion.div>
-            ))}
+          ))}
         </div>
 
         {/* ฝั่งขวา: คำแปล */}
@@ -96,19 +100,20 @@ export default function Game({ week, nickname, goHome }) {
           {defs.map((def) => (
             <motion.div
               key={def.text}
-              ...
-              className={`... ${
-                selectedTerm && selectedTerm.pair === def.text ? 'bg-blue-100' : ''
-              } ${
-                matchedPairs.includes(def.pair) ? 'bg-green-200 text-green-900' : ''
-              }`}
-              ...
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={`p-3 rounded-xl cursor-pointer shadow border text-sm bg-white
+                ${selectedTerm && selectedTerm.pair === def.text ? 'bg-blue-100' : ''}
+                ${matchedPairs.includes(def.pair) ? 'bg-green-200 text-green-900' : ''}
+              `}
+              onClick={() => handleMatch(def)}
             >
               {def.text}
             </motion.div>
           ))}
         </div>
       </div>
+
       {finished && (
         <div className="mt-8 space-y-4">
           <h2 className="text-xl font-bold text-green-600">🎉 จบเกมแล้ว!</h2>
@@ -125,8 +130,11 @@ export default function Game({ week, nickname, goHome }) {
             <button
               onClick={() => {
                 const next = parseInt(week.split("_")[1]) + 1;
-                if (next <= 7) window.location.href = `/?autoStart=true&week=week_${next}&name=${nickname}`;
-                else alert("ไม่มีสัปดาห์ถัดไปแล้ว");
+                if (next <= 7) {
+                  window.location.href = `/?autoStart=true&week=week_${next}&name=${nickname}`;
+                } else {
+                  alert("ไม่มีสัปดาห์ถัดไปแล้ว");
+                }
               }}
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
             >
@@ -152,4 +160,3 @@ export default function Game({ week, nickname, goHome }) {
     </div>
   );
 }
-
