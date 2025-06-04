@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Game from './Game';
 
-const App = () => {
+const AppVocab = () => {
   const [nickname, setNickname] = useState('');
   const [week, setWeek] = useState('');
   const [start, setStart] = useState(false);
