@@ -121,7 +121,20 @@ export default function Game({ week, nickname, goHome }) {
 
           <div className="flex flex-wrap justify-center gap-4 mt-4">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                setTerms([]);
+                setDefs([]);
+                setMatchedPairs([]);
+                setSelectedTerm(null);
+                setFinished(false);
+                setElapsed(0);
+                setStartTime(Date.now());
+
+                const vocab = words[week] || [];
+                setTerms(shuffle(vocab.map((v) => ({ text: v.term, pair: v.definition }))));
+                setDefs(shuffle(vocab.map((v) => ({ text: v.definition, pair: v.term }))));
+              }}
+
               className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
             >
               🔄 เริ่มใหม่
