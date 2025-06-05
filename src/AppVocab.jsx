@@ -5,6 +5,7 @@ import VocabLeaderboard from './VocabLeaderboard';
 
 const SHEET_API_URL = "/api/gas-proxy";
 
+// ====== แก้ฟังก์ชัน speak: ใช้ Samantha บน iOS/Safari ======
 function speak(text, lang = 'auto') {
   let detectLang = lang;
   if (lang === 'auto') {
@@ -24,10 +25,21 @@ function speak(text, lang = 'auto') {
     const reg = new RegExp(`\\b${key}\\b`, "g");
     spoken = spoken.replace(reg, exceptions[key]);
   });
-  const utter = new window.SpeechSynthesisUtterance(spoken);
+
+  const synth = window.speechSynthesis;
+  let voices = synth.getVoices();
+  let utter = new window.SpeechSynthesisUtterance(spoken);
   utter.lang = detectLang;
-  window.speechSynthesis.cancel();
-  window.speechSynthesis.speak(utter);
+  // === เพิ่มบังคับ Samantha สำหรับ en-US ===
+  if (detectLang === 'en-US') {
+    let voice = voices.find(v => v.name === "Samantha" && v.lang === "en-US");
+    if (!voice) voice = voices.find(v => v.lang === "en-US");
+    if (!voice) voice = voices[0];
+    utter.voice = voice;
+  }
+  // ถ้าเป็นภาษาไทย ไม่เซ็ต voice (ใช้ default)
+  synth.cancel();
+  synth.speak(utter);
 }
 
 // ---------- แก้ไขจุดนี้ ----------
