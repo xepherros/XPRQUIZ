@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 
-// ส่ง prop: { onBack, goHome, initialWeek, SHEET_API_URL }
-export default function VocabLeaderboard({ onBack, goHome, initialWeek = "week_1", SHEET_API_URL = "/api/gas-proxy" }) {
+// ส่ง prop: { onBack, goHome, initialWeek, SHEET_API_URL, gameType }
+export default function VocabLeaderboard({
+  onBack,
+  goHome,
+  initialWeek = "week_1",
+  SHEET_API_URL = "/api/gas-proxy",
+  gameType = "vocab" // เพิ่ม default "vocab"
+}) {
   const [week, setWeek] = useState(initialWeek);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,7 +16,10 @@ export default function VocabLeaderboard({ onBack, goHome, initialWeek = "week_1
     async function fetchLeaderboard() {
       setLoading(true);
       try {
-        const res = await fetch(`${SHEET_API_URL}?week=${encodeURIComponent(week)}`);
+        // เพิ่มการ filter ตาม gameType
+        const res = await fetch(
+          `${SHEET_API_URL}?week=${encodeURIComponent(week)}&gameType=${encodeURIComponent(gameType)}`
+        );
         let list = await res.json();
         // กรองชื่อซ้ำ เอาเวลาน้อยสุด
         const unique = {};
@@ -26,7 +35,7 @@ export default function VocabLeaderboard({ onBack, goHome, initialWeek = "week_1
       setLoading(false);
     }
     fetchLeaderboard();
-  }, [week, SHEET_API_URL]);
+  }, [week, SHEET_API_URL, gameType]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50"
@@ -38,7 +47,9 @@ export default function VocabLeaderboard({ onBack, goHome, initialWeek = "week_1
       }}
     >
       <div className="max-w-xs w-full bg-pastel p-6 rounded-2xl shadow-xl text-center font-sans">
-        <h2 className="text-blue-800 text-2xl font-bold mb-3">อันดับ ({week.replace("week_", "Week ")})</h2>
+        <h2 className="text-blue-800 text-2xl font-bold mb-3">
+          อันดับ ({week.replace("week_", "Week ")})
+        </h2>
         <select
           value={week}
           onChange={e => setWeek(e.target.value)}
