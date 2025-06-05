@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import words from './weekly_vocab_list.json';
 import VocabLeaderboard from './VocabLeaderboard';
 
-// ========== เพิ่ม URL Google Apps Script ==========
+// ========== Proxy API URL ==========
 const SHEET_API_URL = "/api/gas-proxy";
-// ===================================================
+// ===================================
 
 function speak(text, lang = 'auto') {
   let detectLang = lang;
@@ -73,7 +73,6 @@ export default function AppVocab({ goHome }) {
     setWeek('');
     setStart(false);
     setFormError("");
-    // reset เกม
     setTerms([]);
     setDefs([]);
     setSelection(null);
@@ -175,18 +174,15 @@ export default function AppVocab({ goHome }) {
   // === ฟังก์ชันบันทึกคะแนนขึ้น Google Sheet ===
   async function saveScoreOnline({ name, time, week }) {
     try {
-      await fetch(SHEET_API_URL, {
+      await fetch(`${SHEET_API_URL}?path=vocab`, {
         method: "POST",
-        body: JSON.stringify({ name, time, week, gameType: "vocab" }),
+        body: JSON.stringify({ name, time, week }),
         headers: { "Content-Type": "application/json" }
       });
     } catch (err) {
       // อาจแจ้งเตือนหรือ log error
     }
   }
-
-  // === ฟังก์ชันดึงอันดับจาก Google Sheet ===
-  // VocabLeaderboard จะเรียกใช้งานเอง
 
   // === ฟังก์ชันบันทึกคะแนน ===
   const saveScore = () => {
@@ -328,7 +324,7 @@ export default function AppVocab({ goHome }) {
                 goHome={handleGoHome}
                 initialWeek={week || "week_1"}
                 SHEET_API_URL={SHEET_API_URL}
-                gameType="vocab"
+          
               />
             )}
           </div>
@@ -396,7 +392,7 @@ export default function AppVocab({ goHome }) {
                   goHome={handleGoHome}
                   initialWeek={currentWeek || week}
                   SHEET_API_URL={SHEET_API_URL}
-                  gameType="vocab"
+          
                 />
               )}
 
