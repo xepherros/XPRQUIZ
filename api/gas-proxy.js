@@ -19,12 +19,12 @@ export default async function handler(req, res) {
     headers: { "Content-Type": "application/json" }
   };
   if (req.method === "POST") {
-    fetchOptions.body = JSON.stringify(req.body);
+    fetchOptions.body = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
   }
 
-  // ต่อ query string ให้กับ GAS_URL กรณี GET
+  // ต่อ query string ให้กับ GAS_URL ทุกกรณี (GET, POST, etc.)
   let url = GAS_URL;
-  if (req.method === "GET" && req.url.includes("?")) {
+  if (req.url.includes("?")) {
     url += req.url.substring(req.url.indexOf("?"));
   }
 
