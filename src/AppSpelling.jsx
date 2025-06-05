@@ -1,3 +1,4 @@
+// (ไฟล์นี้เหมือนกับโพสต์ก่อนหน้า แต่จัด format สำหรับ copy ทั้งไฟล์)
 import React, { useEffect, useRef, useState } from "react";
 
 const correctSound = '/sounds/Correct.mp3';
@@ -49,12 +50,12 @@ function shuffleArray(array) {
     .map(({ val }) => val);
 }
 
-// === ใหม่: ฟังก์ชันบันทึกคะแนนและดึง leaderboard (ออนไลน์) ===
+// === ฟังก์ชันบันทึกคะแนนและดึง leaderboard (ออนไลน์) ===
 async function saveScoreOnline({ name, score, week }) {
   try {
     await fetch(SHEET_API_URL, {
       method: "POST",
-      body: JSON.stringify({ name, score, week: `week_${week}` }),
+      body: JSON.stringify({ name, score, week: `week_${week}`, gameType: "spelling" }),
       headers: { "Content-Type": "application/json" }
     });
   } catch (err) {
@@ -63,7 +64,7 @@ async function saveScoreOnline({ name, score, week }) {
 }
 async function fetchLeaderboardOnline(week) {
   try {
-    const res = await fetch(`${SHEET_API_URL}?week=week_${week}`);
+    const res = await fetch(`${SHEET_API_URL}?week=week_${week}&gameType=spelling`);
     let data = await res.json();
     // เหลือชื่อเดียว คะแนนสูงสุด
     const unique = {};
@@ -97,7 +98,7 @@ export default function AppSpelling({ goHome }) {
   const [answered, setAnswered] = useState([]);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [leaderboard, setLeaderboard] = useState([]); // <== ดึงจากออนไลน์
+  const [leaderboard, setLeaderboard] = useState([]);
 
   const [showConfirmFinish, setShowConfirmFinish] = useState(false);
 
@@ -396,7 +397,7 @@ export default function AppSpelling({ goHome }) {
     }
   }
 
-  // === ใหม่: จบเกมแล้ว บันทึกคะแนนขึ้น sheet
+  // === จบเกมแล้ว บันทึกคะแนนขึ้น sheet
   async function confirmFinishQuiz() {
     setShowConfirmFinish(false);
     setFinished(true);
@@ -451,7 +452,7 @@ export default function AppSpelling({ goHome }) {
     setShowLeaderboard(true);
   }
 
-  // === ใหม่: Leaderboard แบบออนไลน์ ===
+  // === Leaderboard แบบออนไลน์ ===
   function Leaderboard({ week, onBack }) {
     const [selWeek, setSelWeek] = useState(week);
     const [lb, setLb] = useState([]);
@@ -496,11 +497,6 @@ export default function AppSpelling({ goHome }) {
       </div>
     );
   }
-
-  // ... (UI เหมือนเดิม)
-
-  // ส่วน UI/return ทั้งหมดเหมือนเดิม (คงโครงสร้าง return ของคุณเดิมไว้)
-  // เฉพาะ Leaderboard, FinishModal จะใช้ข้อมูล leaderboard จากออนไลน์เท่านั้น
 
   if (!started && !showLeaderboard) {
     return (
