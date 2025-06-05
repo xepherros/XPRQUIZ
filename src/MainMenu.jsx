@@ -16,7 +16,7 @@ export default function MainMenu({ onSelect }) {
         background: "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
       }}
     >
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-xs w-full text-center z-10 relative">
+      <div className="bg-pastel rounded-2xl shadow-xl p-8 max-w-xs w-full text-center z-10 relative">
         <h1 className="text-3xl font-bold mb-8 text-purple-700">เลือกเกมที่ต้องการเล่น</h1>
         <div className="space-y-4">
           <button
