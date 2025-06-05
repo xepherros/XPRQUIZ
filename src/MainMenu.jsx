@@ -21,10 +21,11 @@ export default function MainMenu({ onSelect }) {
         <div className="space-y-4">
           <button
             onClick={() => onSelect("vocab")}
-            className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl text-xl font-bold transition"
-          >
-            🎮 เกมจับคู่คำศัพท์
-          </button>
+            className="bg-[#4dd0e1] hover:bg-[#00bcd4] text-white font-bold py-3 rounded-xl shadow transition"
+            >
+              🎮 เกมจับคู่คำศัพท์
+            </button>
+
           <button
             onClick={() => onSelect("spelling")}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl text-xl font-bold transition"
