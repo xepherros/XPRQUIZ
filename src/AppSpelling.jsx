@@ -584,6 +584,10 @@ export default function AppSpelling({ goHome }) {
           disabled={isAnsweredCorrect}
         >🔄 รีเซ็ต</button>
         <button
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
+          onClick={speak}
+        >🔊 ฟังเสียง</button>
+        <button
           className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
           onClick={goPrevQuestion}
           disabled={currentWordIndex === 0}
@@ -593,10 +597,7 @@ export default function AppSpelling({ goHome }) {
           onClick={goNextQuestionOrFinish}
           disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
         >⏭️ คำถัดไป</button>
-        <button
-          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
-          onClick={speak}
-        >🔊 ฟังเสียง</button>
+
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         <button
