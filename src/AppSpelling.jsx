@@ -83,14 +83,13 @@ export default function AppSpelling({ goHome }) {
   const [resultColor, setResultColor] = useState("black");
   const [selectedTileIdx, setSelectedTileIdx] = useState(null);
 
+  // answered = [{status: "correct"|"wrong", answer: string}]
   const [answered, setAnswered] = useState([]);
-  const [showCorrectModal, setShowCorrectModal] = useState(false);
-  const [showFinishModal, setShowFinishModal] = useState(false);
-  const [showConfirmFinish, setShowConfirmFinish] = useState(false);
-
   const [score, setScore] = useState(0); // correct only
   const [finished, setFinished] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
+
+  const [showConfirmFinish, setShowConfirmFinish] = useState(false);
 
   const samanthaVoice = useRef(null);
 
@@ -112,8 +111,6 @@ export default function AppSpelling({ goHome }) {
     setCurrentWordIndex(0);
     setAnswered([]);
     setFinished(false);
-    setShowCorrectModal(false);
-    setShowFinishModal(false);
     setShowConfirmFinish(false);
   }
 
@@ -155,12 +152,18 @@ export default function AppSpelling({ goHome }) {
   }, [finished, week]);
 
   // === logic เกม ===
-  const handleTileTap = (idx) => setSelectedTileIdx(idx);
+  const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
+
+  const handleTileTap = (idx) => {
+    if (isAnsweredCorrect) return;
+    setSelectedTileIdx(idx);
+  };
   const handleSlotTap = (slotIdx) => {
-    if (selectedTileIdx == null) return;
+    if (selectedTileIdx == null || isAnsweredCorrect) return;
     handleSlotDrop(slotIdx);
   };
   const handleSlotDrop = (slotIdx) => {
+    if (isAnsweredCorrect) return;
     setSlots(slots => slots.map((slot, i) => {
       if (i !== slotIdx || slot.letter === " ") return slot;
       if (slot.tile) return slot;
@@ -170,6 +173,7 @@ export default function AppSpelling({ goHome }) {
     setSelectedTileIdx(null);
   };
   const handleSlotClick = (slotIdx) => {
+    if (isAnsweredCorrect) return;
     setSlots(slots => {
       const slot = slots[slotIdx];
       if (slot.letter === " " || !slot.tile) return slots;
@@ -180,7 +184,7 @@ export default function AppSpelling({ goHome }) {
 
   // ======= ปุ่ม Reset =======
   const resetWord = () => {
-    if (!words.length) return;
+    if (!words.length || isAnsweredCorrect) return;
     const word = words[currentWordIndex].toUpperCase();
     const letters = word.replace(/ /g, '').split('');
     setSlots(
@@ -194,31 +198,9 @@ export default function AppSpelling({ goHome }) {
     setSelectedTileIdx(null);
   };
 
-  // ======= ปุ่ม "ข้ามคำนี้" =======
-  function skipWord() {
-    const word = words[currentWordIndex];
-    setAnswered(ansList => [
-      ...ansList,
-      { word, status: 'skipped' }
-    ]);
-    goNextQuestionOrFinish();
-  }
-
-  // ======= ปุ่ม "คำก่อนหน้า" =======
-  function goPrevWord() {
-    if (currentWordIndex > 0) {
-      setCurrentWordIndex(idx => idx - 1);
-      setResult("");
-      setResultColor("black");
-      setShowCorrectModal(false);
-      setShowConfirmFinish(false);
-      setShowFinishModal(false);
-      setSelectedTileIdx(null);
-    }
-  }
-
   // ======= ตรวจคำตอบ =======
   const checkAnswer = () => {
+    if (isAnsweredCorrect) return;
     let built = "";
     slots.forEach(slot => {
       if (slot.letter === " ") built += " ";
@@ -228,12 +210,14 @@ export default function AppSpelling({ goHome }) {
     const solution = words[currentWordIndex].toUpperCase();
     if (built === solution) {
       playSound(correctSound);
-      setAnswered(ansList => [
-        ...ansList,
-        { word: words[currentWordIndex], status: 'correct' }
-      ]);
+      setAnswered(ansList => {
+        const next = [...ansList];
+        next[currentWordIndex] = { status: "correct", answer: built };
+        return next;
+      });
       setScore(s => s + 1);
-      setShowCorrectModal(true);
+      setResult("✅ ถูกต้อง!");
+      setResultColor("green");
     } else {
       setResult("❌ ลองใหม่!");
       setResultColor("red");
@@ -241,13 +225,14 @@ export default function AppSpelling({ goHome }) {
     }
   };
 
-  // ======= ไปคำถัดไป หรือสรุป =======
+  // ======= ไปข้อถัดไป หรือสรุป =======
   function goNextQuestionOrFinish() {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
-      setShowCorrectModal(false);
+      setResult("");
+      setResultColor("black");
+      setSelectedTileIdx(null);
     } else {
-      setShowCorrectModal(false);
       setShowConfirmFinish(true);
     }
   }
@@ -255,7 +240,6 @@ export default function AppSpelling({ goHome }) {
   // ======= ยืนยันสรุปคะแนน =======
   function confirmFinishQuiz() {
     setShowConfirmFinish(false);
-    setShowFinishModal(true);
     setFinished(true);
 
     // Save leaderboard
@@ -270,10 +254,6 @@ export default function AppSpelling({ goHome }) {
 
   // ======= ฟังเสียง =======
   const speak = () => {
-    if (!window.speechSynthesis) {
-      alert("Speech synthesis not supported.");
-      return;
-    }
     let textToSpeak = words[currentWordIndex];
     if (textToSpeak.toLowerCase() === "agent iata code") {
       textToSpeak = "Agent I A T A code";
@@ -290,8 +270,6 @@ export default function AppSpelling({ goHome }) {
     setScore(0);
     setCurrentWordIndex(0);
     setAnswered([]);
-    setShowFinishModal(false);
-    setShowConfirmFinish(false);
     setFinished(false);
     setStarted(true);
   }
@@ -303,8 +281,6 @@ export default function AppSpelling({ goHome }) {
     setScore(0);
     setCurrentWordIndex(0);
     setAnswered([]);
-    setShowFinishModal(false);
-    setShowConfirmFinish(false);
     setFinished(false);
     setStarted(true);
   }
@@ -316,8 +292,6 @@ export default function AppSpelling({ goHome }) {
     setScore(0);
     setCurrentWordIndex(0);
     setAnswered([]);
-    setShowFinishModal(false);
-    setShowConfirmFinish(false);
     setFinished(false);
     setStarted(true);
   }
@@ -418,25 +392,6 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // ======= Modal เฉลยถูก (3 ดาว) =======
-  function CorrectModal() {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-2xl shadow-lg text-center">
-          <div className="text-4xl mb-2 text-green-600">✅</div>
-          <div className="text-3xl text-yellow-500 mb-2">⭐⭐⭐</div>
-          <div className="text-xl mb-4 text-green-700 font-bold">ถูกต้อง!</div>
-          <button
-            onClick={goNextQuestionOrFinish}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-xl"
-          >
-            ไปข้อถัดไป
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // ======= Modal ยืนยันสรุปคะแนน =======
   function ConfirmFinishModal() {
     return (
@@ -473,7 +428,7 @@ export default function AppSpelling({ goHome }) {
             <ol className="list-decimal ml-6">
               {answered.map((ans, idx) => (
                 <li key={idx}>
-                  {ans.word} — {ans.status === "correct" ? <span className="text-green-700 font-bold">ถูก</span> : <span className="text-orange-700 font-bold">ข้าม</span>}
+                  {words[idx]} — {ans?.status === "correct" ? <span className="text-green-700 font-bold">ถูก</span> : <span className="text-orange-700 font-bold">ยังไม่ถูก</span>}
                 </li>
               ))}
             </ol>
@@ -552,13 +507,15 @@ export default function AppSpelling({ goHome }) {
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 28,
-                    background: slot.tile ? "#e0f7fa" : "#fafbfc",
+                    background: isAnsweredCorrect
+                      ? "#a5e1a2"
+                      : slot.tile ? "#e0f7fa" : "#fafbfc",
                     margin: 1,
-                    cursor: "pointer",
+                    cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
                     userSelect: "none",
                     transition: "background .2s"
                   }}
-                  onClick={() => slot.tile ? handleSlotClick(idx) : (selectedTileIdx !== null && handleSlotTap(idx))}
+                  onClick={() => (isAnsweredCorrect ? undefined : (slot.tile ? handleSlotClick(idx) : (selectedTileIdx !== null && handleSlotTap(idx))))}
                 >
                   {slot.tile && (
                     <span>{slot.tile.letter}</span>
@@ -592,12 +549,12 @@ export default function AppSpelling({ goHome }) {
               background: selectedTileIdx === idx ? "#b3e5fc" : "#fff",
               color: "#1565c0",
               fontWeight: "bold",
-              cursor: "pointer",
+              cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
               userSelect: "none",
               margin: 1,
               boxShadow: "0 2px 4px #0001"
             }}
-            onClick={() => handleTileTap(idx)}
+            onClick={() => isAnsweredCorrect ? undefined : handleTileTap(idx)}
           >
             {tile.letter}
           </div>
@@ -612,11 +569,35 @@ export default function AppSpelling({ goHome }) {
         marginBottom: 12
       }}>{result}</div>
       <div className="flex flex-wrap gap-3 justify-center mt-2 mb-2">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl" onClick={checkAnswer}>ตรวจคำตอบ</button>
-        <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl" onClick={resetWord}>🔄 รีเซ็ต</button>
-        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl" onClick={skipWord}>⏭️ ข้ามคำนี้</button>
-        <button className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl" onClick={speak}>🔊 ฟังเสียง</button>
-        <button className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl" onClick={goPrevWord} disabled={currentWordIndex === 0}>⬅️ คำก่อนหน้า</button>
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl"
+          onClick={checkAnswer}
+          disabled={isAnsweredCorrect}
+        >ตรวจคำตอบ</button>
+        <button
+          className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
+          onClick={resetWord}
+          disabled={isAnsweredCorrect}
+        >🔄 รีเซ็ต</button>
+        <button
+          className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
+          onClick={() => {
+            if (currentWordIndex > 0) setCurrentWordIndex(idx => idx - 1);
+            setResult("");
+            setResultColor("black");
+            setSelectedTileIdx(null);
+          }}
+          disabled={currentWordIndex === 0}
+        >⬅️ คำก่อนหน้า</button>
+        <button
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
+          onClick={goNextQuestionOrFinish}
+          disabled={!isAnsweredCorrect && !result.startsWith("✅")}
+        >ข้อถัดไป</button>
+        <button
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
+          onClick={speak}
+        >🔊 ฟังเสียง</button>
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         <button
@@ -632,9 +613,8 @@ export default function AppSpelling({ goHome }) {
           🏠 กลับหน้าหลัก
         </button>
       </div>
-      {showCorrectModal && <CorrectModal />}
       {showConfirmFinish && <ConfirmFinishModal />}
-      {showFinishModal && <FinishModal />}
+      {finished && <FinishModal />}
     </div>
   );
 }
