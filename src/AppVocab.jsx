@@ -50,6 +50,7 @@ export default function AppVocab({ goHome }) {
   const [nickname, setNickname] = useState('');
   const [week, setWeek] = useState('');
   const [start, setStart] = useState(false);
+  const [formError, setFormError] = useState("");
 
   // State ของเกม
   const [terms, setTerms] = useState([]);
@@ -70,6 +71,7 @@ export default function AppVocab({ goHome }) {
     setNickname('');
     setWeek('');
     setStart(false);
+    setFormError("");
     // reset เกม
     setTerms([]);
     setDefs([]);
@@ -85,11 +87,19 @@ export default function AppVocab({ goHome }) {
     if (goHome) goHome();
   };
 
-  const handleStart = () => {
-    if (nickname && week) {
-      setStart(true);
-      setCurrentWeek(week);
+  const handleStart = (e) => {
+    e.preventDefault();
+    if (!nickname.trim()) {
+      setFormError("กรุณากรอกชื่อผู้เล่น");
+      return;
     }
+    if (!week) {
+      setFormError("กรุณาเลือกสัปดาห์");
+      return;
+    }
+    setStart(true);
+    setFormError("");
+    setCurrentWeek(week);
   };
 
   // --- GAME LOGIC ---
@@ -250,9 +260,7 @@ export default function AppVocab({ goHome }) {
 
   // === ฟังก์ชันสำหรับปุ่ม "ดูอันดับ" ===
   const handleShowLeaderboard = async () => {
-    const data = await fetchLeaderboard(currentWeek);
-
-    // กรองชื่อซ้ำ: เอาเวลาน้อยที่สุดของแต่ละชื่อเท่านั้น
+    const data = await fetchLeaderboard(currentWeek || week);
     const unique = {};
     data.forEach(item => {
       if (
@@ -262,7 +270,6 @@ export default function AppVocab({ goHome }) {
         unique[item.name] = item;
       }
     });
-    // แปลงกลับเป็น array + sort เวลาน้อยสุดก่อน
     const filtered = Object.values(unique).sort((a, b) => Number(a.time) - Number(b.time));
     setLeaderboard(filtered.slice(0, 10)); // Top 10
     setShowLB(true);
@@ -287,30 +294,83 @@ export default function AppVocab({ goHome }) {
     >
       <div className="relative w-full h-full flex flex-col items-center justify-center z-10">
         {!start ? (
-          <div className="bg-pastel p-6 rounded-2xl shadow max-w-md w-full space-y-4">
-            <h1 className="text-2xl font-bold text-center">เริ่มเกมจับคู่คำศัพท์</h1>
-            <input
-              className="w-full border p-2 rounded"
-              placeholder="กรอกชื่อเล่น"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-            />
-            <select
-              className="w-full border p-2 rounded"
-              value={week}
-              onChange={(e) => setWeek(e.target.value)}
-            >
-              <option value="">เลือกสัปดาห์</option>
-              {[...Array(7)].map((_, i) => (
-                <option key={i} value={`week_${i + 1}`}>Week {i + 1}</option>
-              ))}
-            </select>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 transition"
-              onClick={handleStart}
-            >
-              เริ่มเกม
-            </button>
+          <div className="bg-pastel max-w-lg mx-auto p-4 font-sans rounded-xl shadow-xl">
+            <h2 className="text-center text-blue-800 text-2xl font-bold mb-4">เกมจับคู่คำศัพท์</h2>
+            <form onSubmit={handleStart}>
+              <div className="mb-4 text-left">
+                <label className="font-semibold">
+                  ชื่อผู้เล่น:<br />
+                  <input
+                    className="text-lg px-2 py-1 rounded border border-gray-400 w-full mt-1"
+                    value={nickname}
+                    onChange={e => setNickname(e.target.value)}
+                  />
+                </label>
+              </div>
+              <div className="mb-4 text-left">
+                <label className="font-semibold">
+                  เลือกสัปดาห์:<br />
+                  <select
+                    className="text-lg px-2 py-1 rounded border border-gray-400 w-full mt-1"
+                    value={week}
+                    onChange={e => setWeek(e.target.value)}
+                  >
+                    <option value="">-- เลือก week --</option>
+                    {[...Array(7)].map((_, i) => (
+                      <option key={i} value={`week_${i + 1}`}>Week {i + 1}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {formError && <div className="text-red-600 mb-3">{formError}</div>}
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl mr-2"
+              >
+                เริ่มเกม
+              </button>
+            </form>
+            <div className="flex flex-wrap gap-3 justify-center mt-4">
+              <button
+                type="button"
+                onClick={handleShowLeaderboard}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+              >
+                <span role="img" aria-label="trophy">🏆</span> ดูอันดับ
+              </button>
+              <button
+                type="button"
+                onClick={handleGoHome}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl flex items-center gap-2"
+              >
+                <span role="img" aria-label="home">🏠</span> กลับหน้าหลัก
+              </button>
+            </div>
+            {/* แสดง leaderboard modal หลังบ้านในหน้าแรก */}
+            {showLB && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div className="bg-pastel rounded-xl shadow p-4 border max-w-md w-full">
+                  <h2 className="text-lg font-bold text-purple-700 mb-2 text-center">🏆 อันดับ Top 10 ({week ? week.toUpperCase() : "-"})</h2>
+                  {leaderboard.length === 0 ? (
+                    <p className="text-center">ยังไม่มีคะแนนในสัปดาห์นี้</p>
+                  ) : (
+                    <ol className="text-left pl-6">
+                      {leaderboard.map((item, idx) => (
+                        <li key={idx} className="mb-1">
+                          <span className="font-semibold">{idx + 1}.</span> {item.name} <span className="text-gray-500">({item.time} วินาที)</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  <button
+                    onClick={() => setShowLB(false)}
+                    className="mt-3 bg-gray-300 hover:bg-gray-400 text-black px-3 py-1 rounded block mx-auto"
+                  >
+                    ปิดอันดับ
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="w-full">
