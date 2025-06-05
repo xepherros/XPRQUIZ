@@ -98,7 +98,6 @@ export default function AppSpelling({ goHome }) {
     setShowConfirmFinish(false);
   }
 
-  // เตรียม slots และ tiles
   useEffect(() => {
     if (!started) return;
     if (!words.length) return;
@@ -145,10 +144,11 @@ export default function AppSpelling({ goHome }) {
 
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
-  // ฟังก์ชัน renderWordLines ที่แก้บั๊กตัวอักษรหาย/เลื่อน
+  // renderWordLines ที่แก้ไขให้ถูกต้องทั้ง interactive และเฉลย
   function renderWordLines() {
     const word = words[currentWordIndex].toUpperCase();
     const ans = answered[currentWordIndex]?.answer;
+    const isCorrect = answered[currentWordIndex]?.status === "correct";
     let ansIdx = 0;
     let lines = [];
     let currentLine = [];
@@ -157,15 +157,19 @@ export default function AppSpelling({ goHome }) {
         if (currentLine.length) lines.push(currentLine);
         currentLine = [];
       } else {
-        let char = ans
-          ? ans[ansIdx]
-          : slots[i]?.tile?.letter || "";
-        let slotObj = {
-          letter: word[i],
-          tile: char ? { letter: char } : null
-        };
-        currentLine.push({ slot: slotObj, idx: i });
-        ansIdx++;
+        if (isCorrect && ans) {
+          // เฉลย: สร้าง slot ใหม่จากคำตอบ
+          let char = ans[ansIdx];
+          let slotObj = {
+            letter: word[i],
+            tile: char ? { letter: char } : null
+          };
+          currentLine.push({ slot: slotObj, idx: i });
+          ansIdx++;
+        } else {
+          // ยังไม่ถูก: ใช้ slot object จาก state (เพื่อ interactive)
+          currentLine.push({ slot: slots[i], idx: i });
+        }
       }
     }
     if (currentLine.length) lines.push(currentLine);
@@ -197,14 +201,21 @@ export default function AppSpelling({ goHome }) {
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 28,
-                    background: answered[currentWordIndex]?.status === "correct"
+                    background: isCorrect
                       ? "#a5e1a2"
                       : slot.tile ? "#e0f7fa" : "#fafbfc",
                     margin: 1,
-                    cursor: answered[currentWordIndex]?.status === "correct" ? "not-allowed" : "pointer",
+                    cursor: isCorrect ? "not-allowed" : "pointer",
                     userSelect: "none",
                     transition: "background .2s"
                   }}
+                  onClick={() =>
+                    isCorrect
+                      ? undefined
+                      : (slot.tile
+                        ? handleSlotClick(idx)
+                        : (selectedTileIdx !== null && handleSlotTap(idx)))
+                  }
                 >
                   {slot.tile && (
                     <span>{slot.tile.letter}</span>
