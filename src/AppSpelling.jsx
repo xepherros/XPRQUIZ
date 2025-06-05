@@ -54,7 +54,6 @@ function saveLeaderboard(week, leaderboard) {
 }
 
 export default function AppSpelling({ goHome }) {
-  // ฟอร์มเริ่มต้น
   const [playerName, setPlayerName] = useState("");
   const [week, setWeek] = useState("");
   const [formError, setFormError] = useState("");
@@ -70,9 +69,8 @@ export default function AppSpelling({ goHome }) {
   const [resultColor, setResultColor] = useState("black");
   const [selectedTileIdx, setSelectedTileIdx] = useState(null);
 
-  // answered = [{status: "correct"|"wrong"|"notyet", answer: string}]
   const [answered, setAnswered] = useState([]);
-  const [score, setScore] = useState(0); // correct only
+  const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
 
@@ -82,7 +80,6 @@ export default function AppSpelling({ goHome }) {
 
   const words = week ? wordBank[week] : [];
 
-  // --- เริ่มเกม ---
   function handleStart(e) {
     e.preventDefault();
     if (!playerName.trim()) {
@@ -101,23 +98,21 @@ export default function AppSpelling({ goHome }) {
     setShowConfirmFinish(false);
   }
 
-  // --- เตรียมคำแต่ละข้อ ---
+  // เตรียม slots และ tiles
   useEffect(() => {
     if (!started) return;
     if (!words.length) return;
-    // ถ้าเคยตอบถูก ให้เติมช่องสะกดตามที่ตอบไว้
     const word = words[currentWordIndex].toUpperCase();
     const letters = word.replace(/ /g, '').split('');
     let prevAns = answered[currentWordIndex];
     let slotArr;
     if (prevAns?.status === "correct" && prevAns.answer) {
-      // เติมช่องสะกดจากคำตอบเดิม
       let ansArr = prevAns.answer.split('');
       slotArr = word.split("").map((char, idx) =>
         char === " " ? { letter: " ", filled: true, tile: null }
         : { letter: char, filled: true, tile: { letter: ansArr.shift(), id: `answered-${idx}` } }
       );
-      setTiles([]); // ไม่มี tile ให้ลากแล้ว
+      setTiles([]);
     } else {
       slotArr = word.split("").map(char =>
         char === " " ? { letter: " ", filled: true, tile: null } : { letter: char, filled: false, tile: null }
@@ -131,7 +126,6 @@ export default function AppSpelling({ goHome }) {
     // eslint-disable-next-line
   }, [currentWordIndex, started, week, answered]);
 
-  // --- เตรียมเสียงพูด ---
   useEffect(() => {
     const setVoice = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -141,7 +135,6 @@ export default function AppSpelling({ goHome }) {
     setVoice();
   }, []);
 
-  // --- ดึง leaderboard หลังจบเกม ---
   useEffect(() => {
     if (!finished) return;
     if (!week) return;
@@ -150,28 +143,33 @@ export default function AppSpelling({ goHome }) {
     );
   }, [finished, week]);
 
-  // === logic เกม ===
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
-  // renderWordLines: align ซ้ายทุกแถว, เติมกล่องว่างขวาให้ทุกแถวเท่ากัน
+  // ฟังก์ชัน renderWordLines ที่แก้บั๊กตัวอักษรหาย/เลื่อน
   function renderWordLines() {
-    // แบ่งกล่องแต่ละบรรทัด (แต่ละคำ)
-    const lines = [];
+    const word = words[currentWordIndex].toUpperCase();
+    const ans = answered[currentWordIndex]?.answer;
+    let ansIdx = 0;
+    let lines = [];
     let currentLine = [];
-    slots.forEach((slot, idx) => {
-      if (slot.letter === " ") {
-        if (currentLine.length > 0) {
-          lines.push(currentLine);
-          currentLine = [];
-        }
+    for (let i = 0; i < word.length; ++i) {
+      if (word[i] === " ") {
+        if (currentLine.length) lines.push(currentLine);
+        currentLine = [];
       } else {
-        currentLine.push({ slot, idx });
-        if (idx === slots.length - 1 && currentLine.length > 0) {
-          lines.push(currentLine);
-        }
+        let char = ans
+          ? ans[ansIdx]
+          : slots[i]?.tile?.letter || "";
+        let slotObj = {
+          letter: word[i],
+          tile: char ? { letter: char } : null
+        };
+        currentLine.push({ slot: slotObj, idx: i });
+        ansIdx++;
       }
-    });
-    // หาความยาวบรรทัดที่ยาวที่สุด
+    }
+    if (currentLine.length) lines.push(currentLine);
+
     const maxLen = Math.max(...lines.map(line => line.length));
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18, alignItems: "flex-start" }}>
@@ -184,8 +182,7 @@ export default function AppSpelling({ goHome }) {
                 display: "flex",
                 gap: 6,
                 flexWrap: "nowrap",
-                minHeight: 48,
-                // ไม่ต้องกำหนด width, ไม่ต้อง justify-content
+                minHeight: 48
               }}
             >
               {line.map(({ slot, idx }) =>
@@ -200,28 +197,20 @@ export default function AppSpelling({ goHome }) {
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 28,
-                    background: isAnsweredCorrect
+                    background: answered[currentWordIndex]?.status === "correct"
                       ? "#a5e1a2"
                       : slot.tile ? "#e0f7fa" : "#fafbfc",
                     margin: 1,
-                    cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
+                    cursor: answered[currentWordIndex]?.status === "correct" ? "not-allowed" : "pointer",
                     userSelect: "none",
                     transition: "background .2s"
                   }}
-                  onClick={() =>
-                    isAnsweredCorrect
-                      ? undefined
-                      : (slot.tile
-                        ? handleSlotClick(idx)
-                        : (selectedTileIdx !== null && handleSlotTap(idx)))
-                  }
                 >
                   {slot.tile && (
                     <span>{slot.tile.letter}</span>
                   )}
                 </div>
               )}
-              {/* เติมกล่องว่างขวาจนทุกบรรทัดเท่ากัน */}
               {[...Array(rightPad)].map((_, i) =>
                 <div key={"rpad" + i} style={{ width: 36, height: 46, margin: 1, background: "none" }} />
               )}
@@ -260,7 +249,6 @@ export default function AppSpelling({ goHome }) {
     });
   };
 
-  // ======= ปุ่ม Reset =======
   const resetWord = () => {
     if (!words.length || isAnsweredCorrect) return;
     const word = words[currentWordIndex].toUpperCase();
@@ -276,7 +264,6 @@ export default function AppSpelling({ goHome }) {
     setSelectedTileIdx(null);
   };
 
-  // ======= ตรวจคำตอบ =======
   const checkAnswer = () => {
     if (isAnsweredCorrect) return;
     let built = "";
@@ -610,7 +597,6 @@ export default function AppSpelling({ goHome }) {
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
           onClick={goNextQuestionOrFinish}
-          // ปุ่มคำถัดไปเปิดตลอด ยกเว้นข้อสุดท้ายที่ยังไม่ถูก
           disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
         >คำถัดไป</button>
         <button
