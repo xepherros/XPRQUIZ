@@ -220,6 +220,52 @@ export default function AppSpelling({ goHome }) {
 
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
+  // --- เช็คคำตอบอัตโนมัติเมื่อ slots เปลี่ยน ---
+  useEffect(() => {
+    if (!started || isAnsweredCorrect) return;
+    const word = words[currentWordIndex]?.toUpperCase();
+    if (!word) return;
+
+    // สร้างคำที่ประกอบจาก slots
+    let built = "";
+    let slotIdx = 0;
+    for (let i = 0; i < word.length; ++i) {
+      if (word[i] === " ") {
+        built += " ";
+      } else {
+        if (slots[slotIdx] && slots[slotIdx].tile) {
+          built += slots[slotIdx].tile.letter;
+        } else {
+          built += "_";
+        }
+        slotIdx++;
+      }
+    }
+    // ถ้าทุกช่องมีตัวอักษร (ไม่มี "_")
+    if (built.indexOf("_") === -1) {
+      const solution = word.replace(/ +/g, " ");
+      if (built === solution) {
+        playCorrect();
+        setAnswered(ansList => {
+          const next = [...ansList];
+          next[currentWordIndex] = { status: "correct", answer: built };
+          setScore(next.filter(ans => ans?.status === "correct").length);
+          return next;
+        });
+        setResult("✅ ถูกต้อง!");
+        setResultColor("green");
+      } else {
+        setResult("❌ ลองใหม่!");
+        setResultColor("red");
+        playWrong();
+      }
+    } else {
+      setResult("");
+      setResultColor("black");
+    }
+    // eslint-disable-next-line
+  }, [slots]);
+
   function renderWordLines() {
     const word = words[currentWordIndex].toUpperCase();
     const ans = answered[currentWordIndex]?.answer;
@@ -373,41 +419,6 @@ export default function AppSpelling({ goHome }) {
     setSelectedTileIdx(null);
   };
 
-  const checkAnswer = () => {
-    if (isAnsweredCorrect) return;
-    let built = "";
-    let slotIdx = 0;
-    const word = words[currentWordIndex].toUpperCase();
-    for (let i = 0; i < word.length; ++i) {
-      if (word[i] === " ") {
-        built += " ";
-      } else {
-        if (slots[slotIdx] && slots[slotIdx].tile) {
-          built += slots[slotIdx].tile.letter;
-        } else {
-          built += "_";
-        }
-        slotIdx++;
-      }
-    }
-    const solution = word.replace(/ +/g, " ");
-    if (built === solution) {
-      playCorrect(); // เปลี่ยนจาก playSound
-      setAnswered(ansList => {
-        const next = [...ansList];
-        next[currentWordIndex] = { status: "correct", answer: built };
-        setScore(next.filter(ans => ans?.status === "correct").length);
-        return next;
-      });
-      setResult("✅ ถูกต้อง!");
-      setResultColor("green");
-    } else {
-      setResult("❌ ลองใหม่!");
-      setResultColor("red");
-      playWrong(); // เปลี่ยนจาก playSound
-    }
-  };
-
   function goNextQuestionOrFinish() {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
@@ -433,7 +444,7 @@ export default function AppSpelling({ goHome }) {
     setFinished(true);
     await saveScoreOnline({ name: playerName, score, week });
     setLeaderboard(await fetchLeaderboardOnline(week));
-    playWin(); // เปลี่ยนจาก playSound
+    playWin();
   }
 
   const speak = () => {
@@ -757,11 +768,7 @@ export default function AppSpelling({ goHome }) {
           marginBottom: 12
         }}>{result}</div>
         <div className="flex flex-wrap gap-3 justify-center mt-2 mb-2">
-          <button
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl"
-            onClick={checkAnswer}
-            disabled={isAnsweredCorrect}
-          >ตรวจคำตอบ</button>
+          {/* ปุ่มตรวจคำตอบ ถูกลบออกแล้ว */}
           <button
             className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
             onClick={resetWord}
