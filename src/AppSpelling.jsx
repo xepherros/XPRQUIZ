@@ -153,8 +153,9 @@ export default function AppSpelling({ goHome }) {
   // === logic เกม ===
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
-  // แก้บั๊กบรรทัดว่าง: ไม่สร้างบรรทัดเปล่าจากช่องว่าง
+  // renderWordLines: center-align ทุกบรรทัดด้วย padding กล่องว่างซ้าย-ขวา
   function renderWordLines() {
+    // แบ่งกล่องแต่ละบรรทัด (แต่ละคำ)
     const lines = [];
     let currentLine = [];
     slots.forEach((slot, idx) => {
@@ -163,7 +164,6 @@ export default function AppSpelling({ goHome }) {
           lines.push(currentLine);
           currentLine = [];
         }
-        // ไม่ต้อง push บรรทัดว่าง
       } else {
         currentLine.push({ slot, idx });
         if (idx === slots.length - 1 && currentLine.length > 0) {
@@ -171,45 +171,69 @@ export default function AppSpelling({ goHome }) {
         }
       }
     });
+    // หาความยาวบรรทัดที่ยาวที่สุด
+    const maxLen = Math.max(...lines.map(line => line.length));
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-        {lines.map((line, lineIdx) => (
-          <div key={lineIdx} style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
-            {line.map(({ slot, idx }) =>
-              <div
-                key={idx}
-                style={{
-                  width: 36,
-                  height: 46,
-                  border: "2px solid #888",
-                  borderRadius: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 28,
-                  background: isAnsweredCorrect
-                    ? "#a5e1a2"
-                    : slot.tile ? "#e0f7fa" : "#fafbfc",
-                  margin: 1,
-                  cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
-                  userSelect: "none",
-                  transition: "background .2s"
-                }}
-                onClick={() =>
-                  isAnsweredCorrect
-                    ? undefined
-                    : (slot.tile
-                      ? handleSlotClick(idx)
-                      : (selectedTileIdx !== null && handleSlotTap(idx)))
-                }
-              >
-                {slot.tile && (
-                  <span>{slot.tile.letter}</span>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18, alignItems: "center" }}>
+        {lines.map((line, lineIdx) => {
+          // จำนวนกล่องว่างด้านซ้าย = (maxLen - line.length) / 2
+          const pad = maxLen - line.length;
+          const leftPad = Math.floor(pad / 2);
+          const rightPad = pad - leftPad;
+          return (
+            <div
+              key={lineIdx}
+              style={{
+                display: "flex",
+                gap: 6,
+                flexWrap: "nowrap",
+                minHeight: 48,
+                width: maxLen * 42, // 36+6*spacing
+                justifyContent: "center"
+              }}
+            >
+              {[...Array(leftPad)].map((_, i) =>
+                <div key={"lpad" + i} style={{ width: 36, height: 46, margin: 1, background: "none" }} />
+              )}
+              {line.map(({ slot, idx }) =>
+                <div
+                  key={idx}
+                  style={{
+                    width: 36,
+                    height: 46,
+                    border: "2px solid #888",
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 28,
+                    background: isAnsweredCorrect
+                      ? "#a5e1a2"
+                      : slot.tile ? "#e0f7fa" : "#fafbfc",
+                    margin: 1,
+                    cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
+                    userSelect: "none",
+                    transition: "background .2s"
+                  }}
+                  onClick={() =>
+                    isAnsweredCorrect
+                      ? undefined
+                      : (slot.tile
+                        ? handleSlotClick(idx)
+                        : (selectedTileIdx !== null && handleSlotTap(idx)))
+                  }
+                >
+                  {slot.tile && (
+                    <span>{slot.tile.letter}</span>
+                  )}
+                </div>
+              )}
+              {[...Array(rightPad)].map((_, i) =>
+                <div key={"rpad" + i} style={{ width: 36, height: 46, margin: 1, background: "none" }} />
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   }
@@ -585,20 +609,21 @@ export default function AppSpelling({ goHome }) {
           disabled={isAnsweredCorrect}
         >🔄 รีเซ็ต</button>
         <button
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
+          onClick={speak}
+        >🔊 ฟังเสียง</button>
+        <button
           className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
           onClick={goPrevQuestion}
           disabled={currentWordIndex === 0}
-        >⬅️ คำก่อนหน้า</button>
+        >⏮️ คำก่อนหน้า</button>
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
           onClick={goNextQuestionOrFinish}
           // ปุ่มคำถัดไปเปิดตลอด ยกเว้นข้อสุดท้ายที่ยังไม่ถูก
           disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
-        >คำถัดไป</button>
-        <button
-          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
-          onClick={speak}
-        >🔊 ฟังเสียง</button>
+        >⏭️ คำถัดไป</button>
+
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         <button
