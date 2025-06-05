@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 
+// ส่ง prop: { onBack, goHome, initialWeek, SHEET_API_URL }
 export default function VocabLeaderboard({ onBack, goHome, initialWeek = "week_1", SHEET_API_URL = "/api/gas-proxy" }) {
   const [week, setWeek] = useState(initialWeek);
   const [data, setData] = useState([]);
@@ -47,7 +48,7 @@ export default function VocabLeaderboard({ onBack, goHome, initialWeek = "week_1
             <option key={i} value={`week_${i + 1}`}>{`Week ${i + 1}`}</option>
           ))}
         </select>
-        <div className="mb-4 text-left pl-2">
+        <div className="mb-4 text-left pl-2 min-h-[40px]">
           {loading ? (
             <span>กำลังโหลด...</span>
           ) : data.length === 0 ? (
