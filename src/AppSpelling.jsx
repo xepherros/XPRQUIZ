@@ -153,7 +153,7 @@ export default function AppSpelling({ goHome }) {
   // === logic เกม ===
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
-  // renderWordLines: center-align ทุกบรรทัดด้วย padding กล่องว่างซ้าย-ขวา
+  // renderWordLines: align ซ้ายทุกแถว, เติมกล่องว่างขวาให้ทุกแถวเท่ากัน
   function renderWordLines() {
     // แบ่งกล่องแต่ละบรรทัด (แต่ละคำ)
     const lines = [];
@@ -174,12 +174,9 @@ export default function AppSpelling({ goHome }) {
     // หาความยาวบรรทัดที่ยาวที่สุด
     const maxLen = Math.max(...lines.map(line => line.length));
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18, alignItems: "center" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18, alignItems: "flex-start" }}>
         {lines.map((line, lineIdx) => {
-          // จำนวนกล่องว่างด้านซ้าย = (maxLen - line.length) / 2
-          const pad = maxLen - line.length;
-          const leftPad = Math.floor(pad / 2);
-          const rightPad = pad - leftPad;
+          const rightPad = maxLen - line.length;
           return (
             <div
               key={lineIdx}
@@ -188,13 +185,9 @@ export default function AppSpelling({ goHome }) {
                 gap: 6,
                 flexWrap: "nowrap",
                 minHeight: 48,
-                width: maxLen * 42, // 36+6*spacing
-                justifyContent: "center"
+                // ไม่ต้องกำหนด width, ไม่ต้อง justify-content
               }}
             >
-              {[...Array(leftPad)].map((_, i) =>
-                <div key={"lpad" + i} style={{ width: 36, height: 46, margin: 1, background: "none" }} />
-              )}
               {line.map(({ slot, idx }) =>
                 <div
                   key={idx}
@@ -228,6 +221,7 @@ export default function AppSpelling({ goHome }) {
                   )}
                 </div>
               )}
+              {/* เติมกล่องว่างขวาจนทุกบรรทัดเท่ากัน */}
               {[...Array(rightPad)].map((_, i) =>
                 <div key={"rpad" + i} style={{ width: 36, height: 46, margin: 1, background: "none" }} />
               )}
@@ -609,21 +603,20 @@ export default function AppSpelling({ goHome }) {
           disabled={isAnsweredCorrect}
         >🔄 รีเซ็ต</button>
         <button
-          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
-          onClick={speak}
-        >🔊 ฟังเสียง</button>
-        <button
           className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
           onClick={goPrevQuestion}
           disabled={currentWordIndex === 0}
-        >⏮️ คำก่อนหน้า</button>
+        >⬅️ คำก่อนหน้า</button>
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
           onClick={goNextQuestionOrFinish}
           // ปุ่มคำถัดไปเปิดตลอด ยกเว้นข้อสุดท้ายที่ยังไม่ถูก
           disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
-        >⏭️ คำถัดไป</button>
-
+        >คำถัดไป</button>
+        <button
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
+          onClick={speak}
+        >🔊 ฟังเสียง</button>
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         <button
