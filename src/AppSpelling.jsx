@@ -5,91 +5,35 @@ const correctSound = '/sounds/Correct.mp3';
 const wrongSound = '/sounds/Wrong.wav';
 const winSound = '/sounds/Win.wav';
 
-// --- 1. Word list 7 week ---
 const wordBank = {
   1: [
-    "Agent IATA code",
-    "Air waybill",
-    "Airport of departure",
-    "Airport of destination",
-    "Arrival notice",
-    "Berth",
-    "Bill of lading",
-    "Bulk cargo",
-    "Bulk carrier",
-    "Carrier"
+    "Agent IATA code", "Air waybill", "Airport of departure", "Airport of destination",
+    "Arrival notice", "Berth", "Bill of lading", "Bulk cargo", "Bulk carrier", "Carrier"
   ],
+  // ... week 2-7 เหมือนเดิม ...
   2: [
-    "Consignee",
-    "Container",
-    "Customs broker",
-    "Dangerous goods",
-    "Delivery order",
-    "Demurrage",
-    "ETA",
-    "ETD",
-    "Export license",
-    "Freight forwarder"
+    "Consignee","Container","Customs broker","Dangerous goods","Delivery order",
+    "Demurrage","ETA","ETD","Export license","Freight forwarder"
   ],
   3: [
-    "Freight prepaid",
-    "Gross weight",
-    "Handling",
-    "Import license",
-    "Incoterms",
-    "Manifest",
-    "Notify party",
-    "Pallet",
-    "Port of discharge",
-    "Shipper"
+    "Freight prepaid","Gross weight","Handling","Import license","Incoterms",
+    "Manifest","Notify party","Pallet","Port of discharge","Shipper"
   ],
   4: [
-    "Shipping instructions",
-    "Shipping marks",
-    "Stevedore",
-    "Stuffing",
-    "Tare weight",
-    "Terminal",
-    "Transshipment",
-    "Unstuffing",
-    "Warehouse",
-    "Waybill"
+    "Shipping instructions","Shipping marks","Stevedore","Stuffing","Tare weight",
+    "Terminal","Transshipment","Unstuffing","Warehouse","Waybill"
   ],
   5: [
-    "Cargo insurance",
-    "Certificate of origin",
-    "Clean bill of lading",
-    "Commercial invoice",
-    "Consignment",
-    "Container yard",
-    "Customs clearance",
-    "Delivery",
-    "Documentary credit",
-    "Export declaration"
+    "Cargo insurance","Certificate of origin","Clean bill of lading","Commercial invoice",
+    "Consignment","Container yard","Customs clearance","Delivery","Documentary credit","Export declaration"
   ],
   6: [
-    "Freight collect",
-    "Freight forwarders certificate",
-    "Import declaration",
-    "Letter of credit",
-    "Packing list",
-    "Port of loading",
-    "Proforma invoice",
-    "Quarantine",
-    "Shipping order",
-    "Through bill of lading"
+    "Freight collect","Freight forwarders certificate","Import declaration","Letter of credit",
+    "Packing list","Port of loading","Proforma invoice","Quarantine","Shipping order","Through bill of lading"
   ],
   7: [
-    "Tramp vessel",
-    "Vessel",
-    "Warehouse receipt",
-    "Wharfage",
-    "Air cargo",
-    "Booking",
-    "Charter party",
-    "Customs duty",
-    "Export permit",
-    "Transshipment port"
+    "Tramp vessel","Vessel","Warehouse receipt","Wharfage","Air cargo","Booking",
+    "Charter party","Customs duty","Export permit","Transshipment port"
   ]
 };
 
@@ -98,18 +42,15 @@ function playSound(src) {
   audio.currentTime = 0;
   audio.play();
 }
-
 function shuffleArray(array) {
   return array
     .map(val => ({ val, sort: Math.random() }))
     .sort((a, b) => a.sort - b.sort)
     .map(({ val }) => val);
 }
-
 function getLeaderboard(week) {
   return JSON.parse(localStorage.getItem('spelling-leaderboard-week-' + week) || "[]");
 }
-
 function saveLeaderboard(week, leaderboard) {
   localStorage.setItem('spelling-leaderboard-week-' + week, JSON.stringify(leaderboard));
 }
@@ -121,9 +62,9 @@ export default function AppSpelling({ goHome }) {
   const [formError, setFormError] = useState("");
   const [started, setStarted] = useState(false);
 
-  // สำหรับแสดง leaderboard
+  // Leaderboard
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboardWeek, setLeaderboardWeek] = useState("1"); // default week 1
+  const [leaderboardWeek, setLeaderboardWeek] = useState("1");
 
   // เกม
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -131,11 +72,14 @@ export default function AppSpelling({ goHome }) {
   const [tiles, setTiles] = useState([]);
   const [result, setResult] = useState("");
   const [resultColor, setResultColor] = useState("black");
-  const [disableNext, setDisableNext] = useState(true);
   const [selectedTileIdx, setSelectedTileIdx] = useState(null);
-  const [score, setScore] = useState(0);
 
-  // จบเกม
+  const [answered, setAnswered] = useState([]); // [{word, status: 'correct'|'skipped'|'wrong'}]
+  const [showCorrectModal, setShowCorrectModal] = useState(false);
+  const [showFinishModal, setShowFinishModal] = useState(false);
+  const [showConfirmFinish, setShowConfirmFinish] = useState(false);
+
+  const [score, setScore] = useState(0); // correct only
   const [finished, setFinished] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
 
@@ -157,7 +101,11 @@ export default function AppSpelling({ goHome }) {
     setStarted(true);
     setScore(0);
     setCurrentWordIndex(0);
+    setAnswered([]);
     setFinished(false);
+    setShowCorrectModal(false);
+    setShowFinishModal(false);
+    setShowConfirmFinish(false);
   }
 
   // --- เตรียมคำแต่ละข้อ ---
@@ -174,8 +122,8 @@ export default function AppSpelling({ goHome }) {
     setTiles(shuffleArray(letters).map((l, i) => ({ letter: l, id: `${l}-${i}` })));
     setResult("");
     setResultColor("black");
-    setDisableNext(true);
     setSelectedTileIdx(null);
+    // eslint-disable-next-line
   }, [currentWordIndex, started, week]);
 
   // --- เตรียมเสียงพูด ---
@@ -197,11 +145,13 @@ export default function AppSpelling({ goHome }) {
     );
   }, [finished, week]);
 
-  // === logic เกมเดิม ===
-  const handleTileDragStart = (idx) => setSelectedTileIdx(idx);
-
-  const handleSlotDrop = (slotIdx) => {
+  // === logic เกม ===
+  const handleTileTap = (idx) => setSelectedTileIdx(idx);
+  const handleSlotTap = (slotIdx) => {
     if (selectedTileIdx == null) return;
+    handleSlotDrop(slotIdx);
+  };
+  const handleSlotDrop = (slotIdx) => {
     setSlots(slots => slots.map((slot, i) => {
       if (i !== slotIdx || slot.letter === " ") return slot;
       if (slot.tile) return slot;
@@ -210,13 +160,6 @@ export default function AppSpelling({ goHome }) {
     setTiles(tiles => tiles.filter((_, i) => i !== selectedTileIdx));
     setSelectedTileIdx(null);
   };
-
-  const handleTileTap = (idx) => setSelectedTileIdx(idx);
-  const handleSlotTap = (slotIdx) => {
-    if (selectedTileIdx == null) return;
-    handleSlotDrop(slotIdx);
-  };
-
   const handleSlotClick = (slotIdx) => {
     setSlots(slots => {
       const slot = slots[slotIdx];
@@ -226,6 +169,33 @@ export default function AppSpelling({ goHome }) {
     });
   };
 
+  // ======= ปุ่ม Reset =======
+  const resetWord = () => {
+    if (!words.length) return;
+    const word = words[currentWordIndex].toUpperCase();
+    const letters = word.replace(/ /g, '').split('');
+    setSlots(
+      word.split("").map(char =>
+        char === " " ? { letter: " ", filled: true, tile: null } : { letter: char, filled: false, tile: null }
+      )
+    );
+    setTiles(shuffleArray(letters).map((l, i) => ({ letter: l, id: `${l}-${i}` })));
+    setResult("");
+    setResultColor("black");
+    setSelectedTileIdx(null);
+  };
+
+  // ======= ปุ่ม "ข้ามคำนี้" =======
+  function skipWord() {
+    const word = words[currentWordIndex];
+    setAnswered(ansList => [
+      ...ansList,
+      { word, status: 'skipped' }
+    ]);
+    goNextQuestionOrFinish();
+  }
+
+  // ======= ตรวจคำตอบ =======
   const checkAnswer = () => {
     let built = "";
     slots.forEach(slot => {
@@ -235,39 +205,48 @@ export default function AppSpelling({ goHome }) {
     });
     const solution = words[currentWordIndex].toUpperCase();
     if (built === solution) {
-      setResult("✅ Correct!");
-      setResultColor("green");
-      setDisableNext(false);
-      setScore(s => s + 1);
       playSound(correctSound);
+      setAnswered(ansList => [
+        ...ansList,
+        { word: words[currentWordIndex], status: 'correct' }
+      ]);
+      setScore(s => s + 1);
+      setShowCorrectModal(true);
     } else {
-      setResult("❌ Try again!");
+      setResult("❌ ลองใหม่!");
       setResultColor("red");
       playSound(wrongSound);
     }
   };
 
-  const resetWord = () => setCurrentWordIndex(idx => idx);
-  const nextWord = () => {
+  // ======= ไปคำถัดไป หรือสรุป =======
+  function goNextQuestionOrFinish() {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
+      setShowCorrectModal(false);
     } else {
-      // --- จบเกม ---
-      setResult("🎉 You've completed all words!");
-      setResultColor("blue");
-      playSound(winSound);
-      setFinished(true);
-
-      // --- Save to leaderboard ---
-      let lb = getLeaderboard(week);
-      lb.push({ name: playerName, score });
-      saveLeaderboard(week, lb);
-      setLeaderboard(
-        lb.sort((a, b) => b.score - a.score).slice(0, 10)
-      );
+      setShowCorrectModal(false);
+      setShowConfirmFinish(true);
     }
-  };
+  }
 
+  // ======= ยืนยันสรุปคะแนน =======
+  function confirmFinishQuiz() {
+    setShowConfirmFinish(false);
+    setShowFinishModal(true);
+    setFinished(true);
+
+    // Save leaderboard
+    let lb = getLeaderboard(week);
+    lb.push({ name: playerName, score });
+    saveLeaderboard(week, lb);
+    setLeaderboard(
+      lb.sort((a, b) => b.score - a.score).slice(0, 10)
+    );
+    playSound(winSound);
+  }
+
+  // ======= ฟังเสียง =======
   const speak = () => {
     if (!window.speechSynthesis) {
       alert("Speech synthesis not supported.");
@@ -284,60 +263,48 @@ export default function AppSpelling({ goHome }) {
     window.speechSynthesis.speak(utterance);
   };
 
-  // ฟังก์ชันเสริมสำหรับปุ่มจบเกม
+  // ======= ฟังก์ชันจบเกม/เปลี่ยนสัปดาห์/เริ่มใหม่/ดูอันดับ =======
   function restart() {
-    setFinished(false);
     setScore(0);
     setCurrentWordIndex(0);
-    setDisableNext(true);
-    setResult("");
-    setResultColor("black");
-    setSlots([]);
-    setTiles([]);
-    setSelectedTileIdx(null);
+    setAnswered([]);
+    setShowFinishModal(false);
+    setShowConfirmFinish(false);
+    setFinished(false);
     setStarted(true);
   }
-
   function goPrevWeek() {
     setWeek(w => {
       let prev = Number(w) > 1 ? Number(w) - 1 : 7;
       return prev.toString();
     });
-    setFinished(false);
     setScore(0);
     setCurrentWordIndex(0);
-    setDisableNext(true);
-    setResult("");
-    setResultColor("black");
-    setSlots([]);
-    setTiles([]);
-    setSelectedTileIdx(null);
+    setAnswered([]);
+    setShowFinishModal(false);
+    setShowConfirmFinish(false);
+    setFinished(false);
     setStarted(true);
   }
-
   function goNextWeek() {
     setWeek(w => {
       let next = Number(w) < 7 ? Number(w) + 1 : 1;
       return next.toString();
     });
-    setFinished(false);
     setScore(0);
     setCurrentWordIndex(0);
-    setDisableNext(true);
-    setResult("");
-    setResultColor("black");
-    setSlots([]);
-    setTiles([]);
-    setSelectedTileIdx(null);
+    setAnswered([]);
+    setShowFinishModal(false);
+    setShowConfirmFinish(false);
+    setFinished(false);
     setStarted(true);
   }
-
   function handleShowLeaderboard() {
     setLeaderboardWeek(week);
     setShowLeaderboard(true);
   }
 
-  // --- Leaderboard UI ---
+  // ======= Leaderboard UI =======
   function Leaderboard({ week, onBack }) {
     const [selWeek, setSelWeek] = useState(week);
     const lb = getLeaderboard(selWeek).sort((a, b) => b.score - a.score).slice(0, 10);
@@ -372,7 +339,7 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // --- หน้าแรก ---
+  // ======= หน้าแรก =======
   if (!started && !showLeaderboard) {
     return (
       <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
@@ -419,7 +386,7 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // --- Leaderboard เฉพาะหน้า leaderboard ---
+  // ======= Leaderboard =======
   if (showLeaderboard) {
     return (
       <Leaderboard
@@ -429,59 +396,112 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // --- หน้าจบเกม (มีปุ่มเริ่มใหม่/เปลี่ยน week/ดูอันดับ/กลับหน้าหลัก) ---
-  if (finished) {
+  // ======= Modal เฉลยถูก (3 ดาว) =======
+  function CorrectModal() {
     return (
-      <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
-        <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">จบเกม!</h2>
-        <div className="text-xl mb-3">คุณได้คะแนน {score} / {words.length} </div>
-        <div className="mb-3 p-2 bg-gray-100 rounded-xl">
-          <div className="font-bold text-blue-800 mb-1">อันดับสูงสุด (Week {week})</div>
-          <ol>
-            {leaderboard.length === 0 ? <li>ยังไม่มีข้อมูล</li> : leaderboard.map((entry, idx) =>
-              <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
-            )}
-          </ol>
-        </div>
-        <div className="flex flex-wrap gap-3 justify-center mt-4">
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-2xl shadow-lg text-center">
+          <div className="text-4xl mb-2 text-green-600">✅</div>
+          <div className="text-3xl text-yellow-500 mb-2">⭐⭐⭐</div>
+          <div className="text-xl mb-4 text-green-700 font-bold">ถูกต้อง!</div>
           <button
-            onClick={restart}
-            className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
+            onClick={goNextQuestionOrFinish}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-xl"
           >
-            🔄 เริ่มใหม่
-          </button>
-          <button
-            onClick={goPrevWeek}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
-          >
-            ⏮️ สัปดาห์ก่อนหน้า
-          </button>
-          <button
-            onClick={goNextWeek}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
-          >
-            ⏭️ สัปดาห์ถัดไป
-          </button>
-          <button
-            onClick={handleShowLeaderboard}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
-          >
-            🏆 ดูอันดับ
-          </button>
-          <button
-            onClick={goHome}
-            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
-          >
-            🏠 กลับหน้าหลัก
+            ไปข้อถัดไป
           </button>
         </div>
       </div>
     );
   }
 
-  // --- main game ---
+  // ======= Modal ยืนยันสรุปคะแนน =======
+  function ConfirmFinishModal() {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-2xl shadow-lg text-center max-w-xs">
+          <div className="text-xl mb-4 font-bold">คุณแน่ใจหรือไม่ที่จะสรุปคะแนน?</div>
+          <div className="mb-4 text-sm text-gray-600">เมื่อยืนยันแล้วจะไม่สามารถกลับมาแก้ไขได้</div>
+          <button
+            onClick={confirmFinishQuiz}
+            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl mr-2"
+          >
+            สรุปคะแนน
+          </button>
+          <button
+            onClick={() => setShowConfirmFinish(false)}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded-xl"
+          >
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ======= Modal สรุปคะแนน =======
+  function FinishModal() {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-2xl shadow-lg text-center max-w-md w-full">
+          <h2 className="text-2xl text-blue-800 font-bold mb-2">สรุปคะแนน</h2>
+          <div className="mb-2">คุณได้ {score} / {words.length} คะแนน</div>
+          <div className="mb-3 text-left">
+            <div className="font-bold mb-1">ผลลัพธ์:</div>
+            <ol className="list-decimal ml-6">
+              {answered.map((ans, idx) => (
+                <li key={idx}>
+                  {ans.word} — {ans.status === "correct" ? <span className="text-green-700 font-bold">ถูก</span> : <span className="text-orange-700 font-bold">ข้าม</span>}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="font-bold text-blue-800 mb-2">อันดับสูงสุด (Week {week})</div>
+          <ol className="mb-3">
+            {leaderboard.length === 0 ? <li>ยังไม่มีข้อมูล</li> : leaderboard.map((entry, idx) =>
+              <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
+            )}
+          </ol>
+          <div className="flex flex-wrap gap-3 justify-center mt-1">
+            <button
+              onClick={restart}
+              className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
+            >
+              🔄 เริ่มใหม่
+            </button>
+            <button
+              onClick={goPrevWeek}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+            >
+              ⏮️ สัปดาห์ก่อนหน้า
+            </button>
+            <button
+              onClick={goNextWeek}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+            >
+              ⏭️ สัปดาห์ถัดไป
+            </button>
+            <button
+              onClick={handleShowLeaderboard}
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
+            >
+              🏆 ดูอันดับ
+            </button>
+            <button
+              onClick={goHome}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+            >
+              🏠 กลับหน้าหลัก
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ======= main game =======
   return (
-    <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
+    <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg relative">
       <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">เกมสะกดคำ (Week {week})</h2>
       <div className="mb-2 text-center text-base text-gray-600">ชื่อ: {playerName} | คะแนน: {score}</div>
       <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
@@ -549,14 +569,8 @@ export default function AppSpelling({ goHome }) {
       }}>{result}</div>
       <div className="flex flex-wrap gap-3 justify-center mt-2 mb-2">
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl" onClick={checkAnswer}>ตรวจคำตอบ</button>
-        <button className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl" onClick={resetWord}>รีเซ็ต</button>
-        <button
-          className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl${disableNext ? " opacity-50 cursor-not-allowed" : ""}`}
-          onClick={nextWord}
-          disabled={disableNext}
-        >
-          ถัดไป
-        </button>
+        <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl" onClick={resetWord}>🔄 รีเซ็ต</button>
+        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl" onClick={skipWord}>⏭️ ข้ามคำนี้</button>
         <button className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl" onClick={speak}>🔊 ฟังเสียง</button>
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
@@ -573,6 +587,9 @@ export default function AppSpelling({ goHome }) {
           🏠 กลับหน้าหลัก
         </button>
       </div>
+      {showCorrectModal && <CorrectModal />}
+      {showConfirmFinish && <ConfirmFinishModal />}
+      {showFinishModal && <FinishModal />}
     </div>
   );
 }
