@@ -129,8 +129,6 @@ export default function AppSpelling({ goHome }) {
 
   const [showConfirmFinish, setShowConfirmFinish] = useState(false);
 
-  const samanthaVoice = useRef(null);
-
   // --- เพิ่ม hook preload เสียง ---
   const { playCorrect, playWrong, playWin } = usePreloadedSounds();
 
@@ -199,15 +197,6 @@ export default function AppSpelling({ goHome }) {
     setSelectedTileIdx(null);
     // eslint-disable-next-line
   }, [currentWordIndex, started, week, answered]);
-
-  useEffect(() => {
-    const setVoice = () => {
-      const voices = window.speechSynthesis.getVoices();
-      samanthaVoice.current = voices.find(v => v.name === "Samantha");
-    };
-    window.speechSynthesis.onvoiceschanged = setVoice;
-    setVoice();
-  }, []);
 
   // โหลด leaderboard หลังจบเกม
   useEffect(() => {
@@ -447,16 +436,26 @@ export default function AppSpelling({ goHome }) {
     playWin();
   }
 
-  const speak = () => {
-    let textToSpeak = words[currentWordIndex];
-    if (textToSpeak.toLowerCase() === "agent iata code") {
-      textToSpeak = "Agent I A T A code";
-    }
-    const utterance = new window.SpeechSynthesisUtterance(textToSpeak);
-    utterance.lang = 'en-US';
-    if (samanthaVoice.current) utterance.voice = samanthaVoice.current;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+  // ======= แก้ฟังก์ชันพูด (เลือก Samantha อัตโนมัติ) =======
+  const speak = (text) => {
+    const synth = window.speechSynthesis;
+    let voices = synth.getVoices();
+    // หา Samantha ก่อน (iOS/US)
+    let voice = voices.find(v => v.name === "Samantha" && v.lang === "en-US");
+    // ถ้าไม่มี Samantha, fallback เป็น en-US ตัวอื่น
+    if (!voice) voice = voices.find(v => v.lang === "en-US");
+    if (!voice) voice = voices[0];
+    // handle exception words
+    let spoken = text.replace(/\bIATA\b/g, "I A T A")
+                     .replace(/\bETA\b/g, "E T A")
+                     .replace(/\bAWB\b/g, "A W B")
+                     .replace(/\bFCL\b/g, "F C L")
+                     .replace(/\bLCL\b/g, "L C L");
+    const utter = new window.SpeechSynthesisUtterance(spoken);
+    utter.voice = voice;
+    utter.lang = "en-US";
+    synth.cancel();
+    synth.speak(utter);
   };
 
   function restart() {
@@ -776,7 +775,7 @@ export default function AppSpelling({ goHome }) {
           >🔄 รีเซ็ต</button>
           <button
             className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
-            onClick={speak}
+            onClick={() => speak(words[currentWordIndex])}
           >🔊 ฟังเสียง</button>
           <button
             className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
