@@ -201,7 +201,13 @@ export default function AppSpelling({ goHome }) {
 
     const maxLen = Math.max(...lines.map(line => line.length));
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18, alignItems: "flex-start" }}>
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        marginBottom: 18,
+        alignItems: "center"
+      }}>
         {lines.map((line, lineIdx) => {
           const rightPad = maxLen - line.length;
           return (
@@ -211,21 +217,25 @@ export default function AppSpelling({ goHome }) {
                 display: "flex",
                 gap: 6,
                 flexWrap: "nowrap",
-                minHeight: 48
+                minHeight: "clamp(36px, 8vw, 46px)",
+                overflowX: "auto",
+                maxWidth: "100%",
+                scrollbarWidth: "thin",
+                scrollbarColor: "#bdbdbd #fafafa"
               }}
             >
               {line.map(({ slot, slotIndex }) =>
                 <div
                   key={slotIndex}
                   style={{
-                    width: 36,
-                    height: 46,
+                    width: "clamp(28px, 7vw, 36px)",
+                    height: "clamp(36px, 9vw, 46px)",
                     border: "2px solid #888",
                     borderRadius: 8,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 28,
+                    fontSize: "clamp(18px, 4vw, 28px)",
                     background: isCorrect
                       ? "#a5e1a2"
                       : slot.tile ? "#e0f7fa" : "#fafbfc",
@@ -248,7 +258,12 @@ export default function AppSpelling({ goHome }) {
                 </div>
               )}
               {[...Array(rightPad)].map((_, i) =>
-                <div key={"rpad" + i} style={{ width: 36, height: 46, margin: 1, background: "none" }} />
+                <div key={"rpad" + i} style={{
+                  width: "clamp(28px, 7vw, 36px)",
+                  height: "clamp(36px, 9vw, 46px)",
+                  margin: 1,
+                  background: "none"
+                }} />
               )}
             </div>
           );
@@ -341,6 +356,7 @@ export default function AppSpelling({ goHome }) {
     }
   };
 
+  // ✅ แก้ตรงนี้: อนุญาตให้กดต่อได้แม้ข้อสุดท้ายจะยังไม่ถูกต้อง
   function goNextQuestionOrFinish() {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
@@ -532,7 +548,7 @@ export default function AppSpelling({ goHome }) {
 
   function FinishModal() {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto">
         <div className="bg-white p-6 rounded-2xl shadow-lg text-center max-w-md w-full">
           <h2 className="text-2xl text-blue-800 font-bold mb-2">สรุปคะแนน</h2>
           <div className="mb-2">คุณได้ {score} / {words.length} คะแนน</div>
@@ -594,19 +610,26 @@ export default function AppSpelling({ goHome }) {
       <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">เกมสะกดคำ (Week {week})</h2>
       <div className="mb-2 text-center text-base text-gray-600">ชื่อ: {playerName} | คะแนน: {score}</div>
       {renderWordLines()}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
+      <div style={{
+        display: 'flex',
+        gap: 10,
+        marginBottom: 16,
+        flexWrap: "wrap",
+        justifyContent: "center",
+        minHeight: "clamp(36px, 9vw, 46px)"
+      }}>
         {tiles.map((tile, idx) => (
           <div
             key={tile.id}
             style={{
-              width: 36,
-              height: 46,
+              width: "clamp(28px, 7vw, 36px)",
+              height: "clamp(36px, 9vw, 46px)",
               border: "2px solid #1565c0",
               borderRadius: 8,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 28,
+              fontSize: "clamp(18px, 4vw, 28px)",
               background: selectedTileIdx === idx ? "#b3e5fc" : "#fff",
               color: "#1565c0",
               fontWeight: "bold",
@@ -648,8 +671,7 @@ export default function AppSpelling({ goHome }) {
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
           onClick={goNextQuestionOrFinish}
-          disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
-        >คำถัดไป</button>
+        >{currentWordIndex === words.length - 1 ? "สรุปคะแนน" : "คำถัดไป"}</button>
         <button
           className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
           onClick={speak}
