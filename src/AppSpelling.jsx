@@ -4,6 +4,8 @@ const correctSound = '/sounds/Correct.mp3';
 const wrongSound = '/sounds/Wrong.wav';
 const winSound = '/sounds/Win.wav';
 
+const SHEET_API_URL = "/api/gas-proxy"; // <<< ใช้ API เดียวกับ AppVocab
+
 const wordBank = {
   1: [
     "Agent IATA code", "Air waybill", "Airport of departure", "Airport of destination",
@@ -35,16 +37,6 @@ const wordBank = {
   ]
 };
 
-function uniqueHighestLeaderboard(list) {
-  const map = {};
-  list.forEach(item => {
-    if (!map[item.name] || map[item.name] < item.score) {
-      map[item.name] = item.score;
-    }
-  });
-  return Object.entries(map).map(([name, score]) => ({ name, score }));
-}
-
 function playSound(src) {
   const audio = new window.Audio(src);
   audio.currentTime = 0;
@@ -56,13 +48,34 @@ function shuffleArray(array) {
     .sort((a, b) => a.sort - b.sort)
     .map(({ val }) => val);
 }
-function getLeaderboard(week) {
-  const raw = JSON.parse(localStorage.getItem('spelling-leaderboard-week-' + week) || "[]");
-  return uniqueHighestLeaderboard(raw);
+
+// === ใหม่: ฟังก์ชันบันทึกคะแนนและดึง leaderboard (ออนไลน์) ===
+async function saveScoreOnline({ name, score, week }) {
+  try {
+    await fetch(SHEET_API_URL, {
+      method: "POST",
+      body: JSON.stringify({ name, score, week: `week_${week}` }),
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (err) {
+    // อาจแจ้งเตือนหรือ log error
+  }
 }
-function saveLeaderboard(week, leaderboard) {
-  const uniqueList = uniqueHighestLeaderboard(leaderboard);
-  localStorage.setItem('spelling-leaderboard-week-' + week, JSON.stringify(uniqueList));
+async function fetchLeaderboardOnline(week) {
+  try {
+    const res = await fetch(`${SHEET_API_URL}?week=week_${week}`);
+    let data = await res.json();
+    // เหลือชื่อเดียว คะแนนสูงสุด
+    const unique = {};
+    data.forEach(item => {
+      if (!unique[item.name] || Number(item.score) > Number(unique[item.name].score)) {
+        unique[item.name] = item;
+      }
+    });
+    return Object.values(unique).sort((a, b) => b.score - a.score).slice(0, 10);
+  } catch (e) {
+    return [];
+  }
 }
 
 export default function AppSpelling({ goHome }) {
@@ -84,7 +97,7 @@ export default function AppSpelling({ goHome }) {
   const [answered, setAnswered] = useState([]);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]); // <== ดึงจากออนไลน์
 
   const [showConfirmFinish, setShowConfirmFinish] = useState(false);
 
@@ -165,12 +178,13 @@ export default function AppSpelling({ goHome }) {
     setVoice();
   }, []);
 
+  // โหลด leaderboard หลังจบเกม
   useEffect(() => {
     if (!finished) return;
     if (!week) return;
-    setLeaderboard(
-      getLeaderboard(week).sort((a, b) => b.score - a.score).slice(0, 10)
-    );
+    (async () => {
+      setLeaderboard(await fetchLeaderboardOnline(week));
+    })();
   }, [finished, week]);
 
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
@@ -382,15 +396,12 @@ export default function AppSpelling({ goHome }) {
     }
   }
 
-  function confirmFinishQuiz() {
+  // === ใหม่: จบเกมแล้ว บันทึกคะแนนขึ้น sheet
+  async function confirmFinishQuiz() {
     setShowConfirmFinish(false);
     setFinished(true);
-    let lb = getLeaderboard(week);
-    lb.push({ name: playerName, score });
-    saveLeaderboard(week, lb);
-    setLeaderboard(
-      getLeaderboard(week).sort((a, b) => b.score - a.score).slice(0, 10)
-    );
+    await saveScoreOnline({ name: playerName, score, week });
+    setLeaderboard(await fetchLeaderboardOnline(week));
     playSound(winSound);
   }
 
@@ -440,9 +451,20 @@ export default function AppSpelling({ goHome }) {
     setShowLeaderboard(true);
   }
 
+  // === ใหม่: Leaderboard แบบออนไลน์ ===
   function Leaderboard({ week, onBack }) {
     const [selWeek, setSelWeek] = useState(week);
-    const lb = getLeaderboard(selWeek).sort((a, b) => b.score - a.score).slice(0, 10);
+    const [lb, setLb] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      setLoading(true);
+      fetchLeaderboardOnline(selWeek).then(list => {
+        setLb(list);
+        setLoading(false);
+      });
+    }, [selWeek]);
+
     return (
       <div className="max-w-lg mx-auto p-4 font-sans bg-pastel rounded-xl shadow-lg">
         <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">อันดับ (Week {selWeek})</h2>
@@ -452,9 +474,10 @@ export default function AppSpelling({ goHome }) {
           ))}
         </select>
         <ol className="mb-4">
-          {lb.length === 0 ? <li>ยังไม่มีข้อมูล</li> : lb.map((entry, idx) =>
-            <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
-          )}
+          {loading ? <li>กำลังโหลด...</li> :
+            lb.length === 0 ? <li>ยังไม่มีข้อมูล</li> : lb.map((entry, idx) =>
+              <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
+            )}
         </ol>
         <div className="flex flex-wrap gap-3 justify-center mt-2">
           <button
@@ -473,6 +496,11 @@ export default function AppSpelling({ goHome }) {
       </div>
     );
   }
+
+  // ... (UI เหมือนเดิม)
+
+  // ส่วน UI/return ทั้งหมดเหมือนเดิม (คงโครงสร้าง return ของคุณเดิมไว้)
+  // เฉพาะ Leaderboard, FinishModal จะใช้ข้อมูล leaderboard จากออนไลน์เท่านั้น
 
   if (!started && !showLeaderboard) {
     return (
