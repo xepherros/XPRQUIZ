@@ -106,7 +106,6 @@ function shuffleArray(array) {
     .map(({ val }) => val);
 }
 
-// --- 2. Leaderboard Utility ---
 function getLeaderboard(week) {
   return JSON.parse(localStorage.getItem('spelling-leaderboard-week-' + week) || "[]");
 }
@@ -115,13 +114,16 @@ function saveLeaderboard(week, leaderboard) {
   localStorage.setItem('spelling-leaderboard-week-' + week, JSON.stringify(leaderboard));
 }
 
-// --- 3. Main App ---
 export default function AppSpelling({ goHome }) {
   // ฟอร์มเริ่มต้น
   const [playerName, setPlayerName] = useState("");
   const [week, setWeek] = useState("");
   const [formError, setFormError] = useState("");
   const [started, setStarted] = useState(false);
+
+  // สำหรับแสดง leaderboard
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardWeek, setLeaderboardWeek] = useState("1"); // default week 1
 
   // เกม
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
@@ -282,48 +284,110 @@ export default function AppSpelling({ goHome }) {
     window.speechSynthesis.speak(utterance);
   };
 
-  // --- UI Styles (เหมือนเดิม) ---
-  const styles = {
-    container: {
-      maxWidth: 480,
-      margin: "1rem auto",
-      padding: "1rem",
-      fontFamily: "sans-serif",
-      background: "#fff",
-      borderRadius: 12,
-      boxShadow: "0 2px 8px 0 #0002"
-    },
-    wordDisplay: { display: 'flex', gap: 6, marginBottom: 18, flexWrap: "wrap", justifyContent: "center", minHeight: 48 },
-    letterBox: { width: 36, height: 46, border: "2px solid #888", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, background: "#fafbfc", margin: 1, cursor: "pointer", userSelect: "none", transition: "background .2s" },
-    letterBoxFilled: { background: "#e0f7fa" },
-    tileBank: { display: 'flex', gap: 10, marginBottom: 16, flexWrap: "wrap", justifyContent: "center", minHeight: 48 },
-    tile: { width: 36, height: 46, border: "2px solid #1565c0", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, background: "#fff", color: "#1565c0", fontWeight: "bold", cursor: "pointer", userSelect: "none", margin: 1, boxShadow: "0 2px 4px #0001" },
-    tileSelected: { background: "#b3e5fc", borderColor: "#0288d1" },
-    result: { color: resultColor, fontWeight: "bold", minHeight: 32, fontSize: 20, textAlign: "center", marginBottom: 12 },
-    buttonBar: { display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", marginBottom: 14 },
-    button: { padding: "0.7em 1.3em", fontSize: "1.03em", borderRadius: 8, border: "none", background: "#1976d2", color: "#fff", fontWeight: "bold", cursor: "pointer", marginBottom: 4, boxShadow: "0 2px 4px #0001", minWidth: 90 },
-    buttonDisabled: { opacity: 0.5, cursor: "not-allowed" },
-    homeButton: { background: "#e91e63", marginTop: 12 },
-    leaderboard: { marginTop: 16, padding: 8, background: "#f3f3f7", borderRadius: 10 },
-    leaderboardTitle: { fontWeight: "bold", fontSize: 18, marginBottom: 6, color: "#1565c0" }
-  };
+  // ฟังก์ชันเสริมสำหรับปุ่มจบเกม
+  function restart() {
+    setFinished(false);
+    setScore(0);
+    setCurrentWordIndex(0);
+    setDisableNext(true);
+    setResult("");
+    setResultColor("black");
+    setSlots([]);
+    setTiles([]);
+    setSelectedTileIdx(null);
+    setStarted(true);
+  }
 
-  // --- 4. Render ---
-  if (!started) {
+  function goPrevWeek() {
+    setWeek(w => {
+      let prev = Number(w) > 1 ? Number(w) - 1 : 7;
+      return prev.toString();
+    });
+    setFinished(false);
+    setScore(0);
+    setCurrentWordIndex(0);
+    setDisableNext(true);
+    setResult("");
+    setResultColor("black");
+    setSlots([]);
+    setTiles([]);
+    setSelectedTileIdx(null);
+    setStarted(true);
+  }
+
+  function goNextWeek() {
+    setWeek(w => {
+      let next = Number(w) < 7 ? Number(w) + 1 : 1;
+      return next.toString();
+    });
+    setFinished(false);
+    setScore(0);
+    setCurrentWordIndex(0);
+    setDisableNext(true);
+    setResult("");
+    setResultColor("black");
+    setSlots([]);
+    setTiles([]);
+    setSelectedTileIdx(null);
+    setStarted(true);
+  }
+
+  function handleShowLeaderboard() {
+    setLeaderboardWeek(week);
+    setShowLeaderboard(true);
+  }
+
+  // --- Leaderboard UI ---
+  function Leaderboard({ week, onBack }) {
+    const [selWeek, setSelWeek] = useState(week);
+    const lb = getLeaderboard(selWeek).sort((a, b) => b.score - a.score).slice(0, 10);
     return (
-      <div style={styles.container}>
-        <h2 style={{textAlign: "center", color: "#1565c0", marginBottom: 18}}>เริ่มเกมสะกดคำ</h2>
+      <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
+        <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">อันดับ (Week {selWeek})</h2>
+        <select value={selWeek} onChange={e => setSelWeek(e.target.value)} className="text-base mb-2 border border-gray-400 rounded px-2 py-1">
+          {[1,2,3,4,5,6,7].map(w=>(
+            <option key={w} value={w}>Week {w}</option>
+          ))}
+        </select>
+        <ol className="mb-4">
+          {lb.length === 0 ? <li>ยังไม่มีข้อมูล</li> : lb.map((entry, idx) =>
+            <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
+          )}
+        </ol>
+        <div className="flex flex-wrap gap-3 justify-center mt-2">
+          <button
+            onClick={onBack}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+          >
+            ← กลับ
+          </button>
+          <button
+            onClick={goHome}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+          >
+            🏠 กลับหน้าหลัก
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- หน้าแรก ---
+  if (!started && !showLeaderboard) {
+    return (
+      <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
+        <h2 className="text-center text-blue-800 text-2xl font-bold mb-4">เกมสะกดคำ</h2>
         <form onSubmit={handleStart}>
-          <div style={{marginBottom: 14}}>
+          <div className="mb-4">
             <label>
               ชื่อผู้เล่น:<br/>
-              <input value={playerName} onChange={e => setPlayerName(e.target.value)} style={{fontSize:18, padding:6, borderRadius:6, border:"1px solid #888", width:"100%"}} />
+              <input value={playerName} onChange={e => setPlayerName(e.target.value)} className="text-lg px-2 py-1 rounded border border-gray-400 w-full" />
             </label>
           </div>
-          <div style={{marginBottom: 14}}>
+          <div className="mb-4">
             <label>
               เลือกสัปดาห์:<br/>
-              <select value={week} onChange={e => setWeek(e.target.value)} style={{fontSize:18, padding:6, borderRadius:6, border:"1px solid #888", width:"100%"}}>
+              <select value={week} onChange={e => setWeek(e.target.value)} className="text-lg px-2 py-1 rounded border border-gray-400 w-full">
                 <option value="">-- เลือก week --</option>
                 {[1,2,3,4,5,6,7].map(w=>(
                   <option key={w} value={w}>Week {w}</option>
@@ -331,51 +395,114 @@ export default function AppSpelling({ goHome }) {
               </select>
             </label>
           </div>
-          {formError && <div style={{color:"red", marginBottom:10}}>{formError}</div>}
-          <button type="submit" style={styles.button}>เริ่มเกม</button>
+          {formError && <div className="text-red-600 mb-3">{formError}</div>}
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl mr-2">เริ่มเกม</button>
         </form>
-        <button style={{...styles.button, ...styles.homeButton, width: "100%"}} onClick={goHome}>กลับหน้าหลัก</button>
+        <div className="flex flex-wrap gap-3 justify-center mt-4">
+          <button
+            onClick={() => {
+              setLeaderboardWeek(week || "1");
+              setShowLeaderboard(true);
+            }}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
+          >
+            🏆 ดูอันดับ
+          </button>
+          <button
+            onClick={goHome}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+          >
+            🏠 กลับหน้าหลัก
+          </button>
+        </div>
       </div>
     );
   }
 
+  // --- Leaderboard เฉพาะหน้า leaderboard ---
+  if (showLeaderboard) {
+    return (
+      <Leaderboard
+        week={leaderboardWeek}
+        onBack={() => setShowLeaderboard(false)}
+      />
+    );
+  }
+
+  // --- หน้าจบเกม (มีปุ่มเริ่มใหม่/เปลี่ยน week/ดูอันดับ/กลับหน้าหลัก) ---
   if (finished) {
     return (
-      <div style={styles.container}>
-        <h2 style={{textAlign: "center", color: "#1565c0"}}>จบเกม!</h2>
-        <div style={{fontSize:20, marginBottom:12}}>คุณได้คะแนน {score} / {words.length} </div>
-        <div style={styles.leaderboard}>
-          <div style={styles.leaderboardTitle}>อันดับสูงสุด (Week {week})</div>
+      <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
+        <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">จบเกม!</h2>
+        <div className="text-xl mb-3">คุณได้คะแนน {score} / {words.length} </div>
+        <div className="mb-3 p-2 bg-gray-100 rounded-xl">
+          <div className="font-bold text-blue-800 mb-1">อันดับสูงสุด (Week {week})</div>
           <ol>
             {leaderboard.length === 0 ? <li>ยังไม่มีข้อมูล</li> : leaderboard.map((entry, idx) =>
               <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
             )}
           </ol>
         </div>
-        <button style={styles.button} onClick={() => {
-          setStarted(false);
-          setPlayerName("");
-          setWeek("");
-          setScore(0);
-        }}>เล่นใหม่</button>
-        <button style={{...styles.button, ...styles.homeButton, width: "100%"}} onClick={goHome}>กลับหน้าหลัก</button>
+        <div className="flex flex-wrap gap-3 justify-center mt-4">
+          <button
+            onClick={restart}
+            className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
+          >
+            🔄 เริ่มใหม่
+          </button>
+          <button
+            onClick={goPrevWeek}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+          >
+            ⏮️ สัปดาห์ก่อนหน้า
+          </button>
+          <button
+            onClick={goNextWeek}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+          >
+            ⏭️ สัปดาห์ถัดไป
+          </button>
+          <button
+            onClick={handleShowLeaderboard}
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
+          >
+            🏆 ดูอันดับ
+          </button>
+          <button
+            onClick={goHome}
+            className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+          >
+            🏠 กลับหน้าหลัก
+          </button>
+        </div>
       </div>
     );
   }
 
   // --- main game ---
   return (
-    <div style={styles.container}>
-      <h2 style={{textAlign: "center", color: "#1565c0", marginBottom: 18}}>เกมสะกดคำ (Week {week})</h2>
-      <div style={{marginBottom:8, textAlign:"center", color:"#666"}}>ชื่อ: {playerName} | คะแนน: {score}</div>
-      <div style={styles.wordDisplay}>
+    <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
+      <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">เกมสะกดคำ (Week {week})</h2>
+      <div className="mb-2 text-center text-base text-gray-600">ชื่อ: {playerName} | คะแนน: {score}</div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
         {slots.map((slot, idx) => slot.letter === " " ?
           <div key={idx} style={{ width: 14 }} /> :
           <div
             key={idx}
             style={{
-              ...styles.letterBox,
-              ...(slot.tile && styles.letterBoxFilled)
+              width: 36,
+              height: 46,
+              border: "2px solid #888",
+              borderRadius: 8,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              background: slot.tile ? "#e0f7fa" : "#fafbfc",
+              margin: 1,
+              cursor: "pointer",
+              userSelect: "none",
+              transition: "background .2s"
             }}
             onClick={() => slot.tile ? handleSlotClick(idx) : (selectedTileIdx !== null && handleSlotTap(idx))}
           >
@@ -385,13 +512,26 @@ export default function AppSpelling({ goHome }) {
           </div>
         )}
       </div>
-      <div style={styles.tileBank}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
         {tiles.map((tile, idx) => (
           <div
             key={tile.id}
             style={{
-              ...styles.tile,
-              ...(selectedTileIdx === idx ? styles.tileSelected : {})
+              width: 36,
+              height: 46,
+              border: "2px solid #1565c0",
+              borderRadius: 8,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 28,
+              background: selectedTileIdx === idx ? "#b3e5fc" : "#fff",
+              color: "#1565c0",
+              fontWeight: "bold",
+              cursor: "pointer",
+              userSelect: "none",
+              margin: 1,
+              boxShadow: "0 2px 4px #0001"
             }}
             onClick={() => handleTileTap(idx)}
           >
@@ -399,20 +539,40 @@ export default function AppSpelling({ goHome }) {
           </div>
         ))}
       </div>
-      <div style={styles.result}>{result}</div>
-      <div style={styles.buttonBar}>
-        <button style={styles.button} onClick={checkAnswer}>ตรวจคำตอบ</button>
-        <button style={styles.button} onClick={resetWord}>รีเซ็ต</button>
+      <div style={{
+        color: resultColor,
+        fontWeight: "bold",
+        minHeight: 32,
+        fontSize: 20,
+        textAlign: "center",
+        marginBottom: 12
+      }}>{result}</div>
+      <div className="flex flex-wrap gap-3 justify-center mt-2 mb-2">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl" onClick={checkAnswer}>ตรวจคำตอบ</button>
+        <button className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl" onClick={resetWord}>รีเซ็ต</button>
         <button
-          style={{...styles.button, ...(disableNext ? styles.buttonDisabled : {})}}
+          className={`bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl${disableNext ? " opacity-50 cursor-not-allowed" : ""}`}
           onClick={nextWord}
           disabled={disableNext}
         >
           ถัดไป
         </button>
-        <button style={styles.button} onClick={speak}>🔊 ฟังเสียง</button>
+        <button className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl" onClick={speak}>🔊 ฟังเสียง</button>
       </div>
-      <button style={{...styles.button, ...styles.homeButton, width: "100%"}} onClick={goHome}>กลับหน้าหลัก</button>
+      <div className="flex flex-wrap gap-3 justify-center mt-2">
+        <button
+          onClick={handleShowLeaderboard}
+          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
+        >
+          🏆 ดูอันดับ
+        </button>
+        <button
+          onClick={goHome}
+          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+        >
+          🏠 กลับหน้าหลัก
+        </button>
+      </div>
     </div>
   );
 }
