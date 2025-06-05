@@ -37,10 +37,37 @@ const wordBank = {
   ]
 };
 
-function playSound(src) {
-  const audio = new window.Audio(src);
-  audio.currentTime = 0;
-  audio.play();
+// ----------- แก้ไข: preload และ reuse เสียง -----------
+function usePreloadedSounds() {
+  const correctRef = useRef();
+  const wrongRef = useRef();
+  const winRef = useRef();
+
+  useEffect(() => {
+    correctRef.current = new window.Audio(correctSound);
+    wrongRef.current = new window.Audio(wrongSound);
+    winRef.current = new window.Audio(winSound);
+  }, []);
+
+  const playCorrect = () => {
+    if (correctRef.current) {
+      correctRef.current.currentTime = 0;
+      correctRef.current.play();
+    }
+  };
+  const playWrong = () => {
+    if (wrongRef.current) {
+      wrongRef.current.currentTime = 0;
+      wrongRef.current.play();
+    }
+  };
+  const playWin = () => {
+    if (winRef.current) {
+      winRef.current.currentTime = 0;
+      winRef.current.play();
+    }
+  };
+  return { playCorrect, playWrong, playWin };
 }
 
 function shuffleArray(array) {
@@ -103,6 +130,9 @@ export default function AppSpelling({ goHome }) {
   const [showConfirmFinish, setShowConfirmFinish] = useState(false);
 
   const samanthaVoice = useRef(null);
+
+  // --- เพิ่ม hook preload เสียง ---
+  const { playCorrect, playWrong, playWin } = usePreloadedSounds();
 
   const words = week ? wordBank[week] : [];
 
@@ -362,7 +392,7 @@ export default function AppSpelling({ goHome }) {
     }
     const solution = word.replace(/ +/g, " ");
     if (built === solution) {
-      playSound(correctSound);
+      playCorrect(); // เปลี่ยนจาก playSound
       setAnswered(ansList => {
         const next = [...ansList];
         next[currentWordIndex] = { status: "correct", answer: built };
@@ -374,7 +404,7 @@ export default function AppSpelling({ goHome }) {
     } else {
       setResult("❌ ลองใหม่!");
       setResultColor("red");
-      playSound(wrongSound);
+      playWrong(); // เปลี่ยนจาก playSound
     }
   };
 
@@ -403,7 +433,7 @@ export default function AppSpelling({ goHome }) {
     setFinished(true);
     await saveScoreOnline({ name: playerName, score, week });
     setLeaderboard(await fetchLeaderboardOnline(week));
-    playSound(winSound);
+    playWin(); // เปลี่ยนจาก playSound
   }
 
   const speak = () => {
