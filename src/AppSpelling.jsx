@@ -5,12 +5,21 @@ const correctSound = '/sounds/Correct.mp3';
 const wrongSound = '/sounds/Wrong.wav';
 const winSound = '/sounds/Win.wav';
 
+// --- 1. Word list 7 week ---
 const wordBank = {
   1: [
-    "Agent IATA code", "Air waybill", "Airport of departure", "Airport of destination",
-    "Arrival notice", "Berth", "Bill of lading", "Bulk cargo", "Bulk carrier", "Carrier"
+    "Agent IATA code",
+    "Air waybill",
+    "Airport of departure",
+    "Airport of destination",
+    "Arrival notice",
+    "Berth",
+    "Bill of lading",
+    "Bulk cargo",
+    "Bulk carrier",
+    "Carrier"
   ],
-  // ... week 2-7 เหมือนเดิม ...
+  // ... เติม week 2-7 ตามเดิม ...
   2: [
     "Consignee","Container","Customs broker","Dangerous goods","Delivery order",
     "Demurrage","ETA","ETD","Export license","Freight forwarder"
@@ -74,7 +83,7 @@ export default function AppSpelling({ goHome }) {
   const [resultColor, setResultColor] = useState("black");
   const [selectedTileIdx, setSelectedTileIdx] = useState(null);
 
-  const [answered, setAnswered] = useState([]); // [{word, status: 'correct'|'skipped'|'wrong'}]
+  const [answered, setAnswered] = useState([]);
   const [showCorrectModal, setShowCorrectModal] = useState(false);
   const [showFinishModal, setShowFinishModal] = useState(false);
   const [showConfirmFinish, setShowConfirmFinish] = useState(false);
@@ -193,6 +202,19 @@ export default function AppSpelling({ goHome }) {
       { word, status: 'skipped' }
     ]);
     goNextQuestionOrFinish();
+  }
+
+  // ======= ปุ่ม "คำก่อนหน้า" =======
+  function goPrevWord() {
+    if (currentWordIndex > 0) {
+      setCurrentWordIndex(idx => idx - 1);
+      setResult("");
+      setResultColor("black");
+      setShowCorrectModal(false);
+      setShowConfirmFinish(false);
+      setShowFinishModal(false);
+      setSelectedTileIdx(null);
+    }
   }
 
   // ======= ตรวจคำตอบ =======
@@ -500,38 +522,60 @@ export default function AppSpelling({ goHome }) {
   }
 
   // ======= main game =======
+  // ======= Render word by line =======
+  function renderWordLines() {
+    // แยก array เป็น array ของ array ตามช่องว่าง
+    const lines = [];
+    let currentLine = [];
+    slots.forEach((slot, idx) => {
+      currentLine.push({ slot, idx });
+      if (slot.letter === " " || idx === slots.length - 1) {
+        lines.push(currentLine);
+        currentLine = [];
+      }
+    });
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+        {lines.map((line, lineIdx) => (
+          <div key={lineIdx} style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
+            {line.map(({ slot, idx }) =>
+              slot.letter === " " ?
+                <div key={idx} style={{ width: 14 }} /> :
+                <div
+                  key={idx}
+                  style={{
+                    width: 36,
+                    height: 46,
+                    border: "2px solid #888",
+                    borderRadius: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 28,
+                    background: slot.tile ? "#e0f7fa" : "#fafbfc",
+                    margin: 1,
+                    cursor: "pointer",
+                    userSelect: "none",
+                    transition: "background .2s"
+                  }}
+                  onClick={() => slot.tile ? handleSlotClick(idx) : (selectedTileIdx !== null && handleSlotTap(idx))}
+                >
+                  {slot.tile && (
+                    <span>{slot.tile.letter}</span>
+                  )}
+                </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg relative">
       <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">เกมสะกดคำ (Week {week})</h2>
       <div className="mb-2 text-center text-base text-gray-600">ชื่อ: {playerName} | คะแนน: {score}</div>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
-        {slots.map((slot, idx) => slot.letter === " " ?
-          <div key={idx} style={{ width: 14 }} /> :
-          <div
-            key={idx}
-            style={{
-              width: 36,
-              height: 46,
-              border: "2px solid #888",
-              borderRadius: 8,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 28,
-              background: slot.tile ? "#e0f7fa" : "#fafbfc",
-              margin: 1,
-              cursor: "pointer",
-              userSelect: "none",
-              transition: "background .2s"
-            }}
-            onClick={() => slot.tile ? handleSlotClick(idx) : (selectedTileIdx !== null && handleSlotTap(idx))}
-          >
-            {slot.tile && (
-              <span>{slot.tile.letter}</span>
-            )}
-          </div>
-        )}
-      </div>
+      {renderWordLines()}
       <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
         {tiles.map((tile, idx) => (
           <div
@@ -572,6 +616,7 @@ export default function AppSpelling({ goHome }) {
         <button className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl" onClick={resetWord}>🔄 รีเซ็ต</button>
         <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl" onClick={skipWord}>⏭️ ข้ามคำนี้</button>
         <button className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl" onClick={speak}>🔊 ฟังเสียง</button>
+        <button className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl" onClick={goPrevWord} disabled={currentWordIndex === 0}>⬅️ คำก่อนหน้า</button>
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         <button
