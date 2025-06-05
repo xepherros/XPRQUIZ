@@ -177,7 +177,7 @@ export default function AppVocab({ goHome }) {
     try {
       await fetch(SHEET_API_URL, {
         method: "POST",
-        body: JSON.stringify({ name, time, week }),
+        body: JSON.stringify({ name, time, week, gameType: "vocab" }),
         headers: { "Content-Type": "application/json" }
       });
     } catch (err) {
@@ -328,6 +328,7 @@ export default function AppVocab({ goHome }) {
                 goHome={handleGoHome}
                 initialWeek={week || "week_1"}
                 SHEET_API_URL={SHEET_API_URL}
+                gameType="vocab"
               />
             )}
           </div>
@@ -395,6 +396,7 @@ export default function AppVocab({ goHome }) {
                   goHome={handleGoHome}
                   initialWeek={currentWeek || week}
                   SHEET_API_URL={SHEET_API_URL}
+                  gameType="vocab"
                 />
               )}
 
