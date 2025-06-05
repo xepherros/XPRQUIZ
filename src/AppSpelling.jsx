@@ -153,6 +153,66 @@ export default function AppSpelling({ goHome }) {
   // === logic เกม ===
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
+  // แบ่งแต่ละคำเป็นบรรทัด (fix ปัญหา "ช่องว่าง" ทำให้กล่องแปลก)
+  function renderWordLines() {
+    const lines = [];
+    let currentLine = [];
+    slots.forEach((slot, idx) => {
+      if (slot.letter === " ") {
+        if (currentLine.length > 0) {
+          lines.push(currentLine);
+          currentLine = [];
+        }
+      } else {
+        currentLine.push({ slot, idx });
+        if (idx === slots.length - 1) {
+          lines.push(currentLine);
+        }
+      }
+    });
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+        {lines.map((line, lineIdx) => (
+          <div key={lineIdx} style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
+            {line.map(({ slot, idx }) =>
+              <div
+                key={idx}
+                style={{
+                  width: 36,
+                  height: 46,
+                  border: "2px solid #888",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 28,
+                  background: isAnsweredCorrect
+                    ? "#a5e1a2"
+                    : slot.tile ? "#e0f7fa" : "#fafbfc",
+                  margin: 1,
+                  cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
+                  userSelect: "none",
+                  transition: "background .2s"
+                }}
+                onClick={() =>
+                  isAnsweredCorrect
+                    ? undefined
+                    : (slot.tile
+                      ? handleSlotClick(idx)
+                      : (selectedTileIdx !== null && handleSlotTap(idx)))
+                }
+              >
+                {slot.tile && (
+                  <span>{slot.tile.letter}</span>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const handleTileTap = (idx) => {
     if (isAnsweredCorrect) return;
     setSelectedTileIdx(idx);
@@ -212,7 +272,6 @@ export default function AppSpelling({ goHome }) {
       setAnswered(ansList => {
         const next = [...ansList];
         next[currentWordIndex] = { status: "correct", answer: built };
-        // คำนวณคะแนนใหม่
         setScore(next.filter(ans => ans?.status === "correct").length);
         return next;
       });
@@ -225,7 +284,6 @@ export default function AppSpelling({ goHome }) {
     }
   };
 
-  // ======= ไปข้อถัดไป หรือสรุป =======
   function goNextQuestionOrFinish() {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
@@ -236,8 +294,6 @@ export default function AppSpelling({ goHome }) {
       setShowConfirmFinish(true);
     }
   }
-
-  // ======= ย้อนกลับ =======
   function goPrevQuestion() {
     if (currentWordIndex > 0) {
       setCurrentWordIndex(idx => idx - 1);
@@ -247,7 +303,6 @@ export default function AppSpelling({ goHome }) {
     }
   }
 
-  // ======= ยืนยันสรุปคะแนน =======
   function confirmFinishQuiz() {
     setShowConfirmFinish(false);
     setFinished(true);
@@ -260,7 +315,6 @@ export default function AppSpelling({ goHome }) {
     playSound(winSound);
   }
 
-  // ======= ฟังเสียง =======
   const speak = () => {
     let textToSpeak = words[currentWordIndex];
     if (textToSpeak.toLowerCase() === "agent iata code") {
@@ -307,7 +361,6 @@ export default function AppSpelling({ goHome }) {
     setShowLeaderboard(true);
   }
 
-  // ======= Leaderboard UI =======
   function Leaderboard({ week, onBack }) {
     const [selWeek, setSelWeek] = useState(week);
     const lb = getLeaderboard(selWeek).sort((a, b) => b.score - a.score).slice(0, 10);
@@ -342,7 +395,6 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // ======= หน้าแรก =======
   if (!started && !showLeaderboard) {
     return (
       <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg">
@@ -389,7 +441,6 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // ======= Leaderboard =======
   if (showLeaderboard) {
     return (
       <Leaderboard
@@ -399,7 +450,6 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // ======= Modal ยืนยันสรุปคะแนน =======
   function ConfirmFinishModal() {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -423,7 +473,6 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // ======= Modal สรุปคะแนน =======
   function FinishModal() {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -483,56 +532,6 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  // ======= main game =======
-  function renderWordLines() {
-    const lines = [];
-    let currentLine = [];
-    slots.forEach((slot, idx) => {
-      currentLine.push({ slot, idx });
-      if (slot.letter === " " || idx === slots.length - 1) {
-        lines.push(currentLine);
-        currentLine = [];
-      }
-    });
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-        {lines.map((line, lineIdx) => (
-          <div key={lineIdx} style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center", minHeight: 48 }}>
-            {line.map(({ slot, idx }) =>
-              slot.letter === " " ?
-                <div key={idx} style={{ width: 14 }} /> :
-                <div
-                  key={idx}
-                  style={{
-                    width: 36,
-                    height: 46,
-                    border: "2px solid #888",
-                    borderRadius: 8,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 28,
-                    background: answered[currentWordIndex]?.status === "correct"
-                      ? "#a5e1a2"
-                      : slot.tile ? "#e0f7fa" : "#fafbfc",
-                    margin: 1,
-                    cursor: answered[currentWordIndex]?.status === "correct" ? "not-allowed" : "pointer",
-                    userSelect: "none",
-                    transition: "background .2s"
-                  }}
-                  onClick={() => (answered[currentWordIndex]?.status === "correct" ? undefined : (slot.tile ? handleSlotClick(idx) : (selectedTileIdx !== null && handleSlotTap(idx))))}
-                >
-                  {slot.tile && (
-                    <span>{slot.tile.letter}</span>
-                  )}
-                </div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-lg mx-auto p-4 font-sans bg-white rounded-xl shadow-lg relative">
       <h2 className="text-center text-blue-800 text-2xl font-bold mb-3">เกมสะกดคำ (Week {week})</h2>
@@ -554,12 +553,12 @@ export default function AppSpelling({ goHome }) {
               background: selectedTileIdx === idx ? "#b3e5fc" : "#fff",
               color: "#1565c0",
               fontWeight: "bold",
-              cursor: answered[currentWordIndex]?.status === "correct" ? "not-allowed" : "pointer",
+              cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
               userSelect: "none",
               margin: 1,
               boxShadow: "0 2px 4px #0001"
             }}
-            onClick={() => answered[currentWordIndex]?.status === "correct" ? undefined : handleTileTap(idx)}
+            onClick={() => isAnsweredCorrect ? undefined : handleTileTap(idx)}
           >
             {tile.letter}
           </div>
@@ -577,12 +576,12 @@ export default function AppSpelling({ goHome }) {
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl"
           onClick={checkAnswer}
-          disabled={answered[currentWordIndex]?.status === "correct"}
+          disabled={isAnsweredCorrect}
         >ตรวจคำตอบ</button>
         <button
           className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
           onClick={resetWord}
-          disabled={answered[currentWordIndex]?.status === "correct"}
+          disabled={isAnsweredCorrect}
         >🔄 รีเซ็ต</button>
         <button
           className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
@@ -592,7 +591,7 @@ export default function AppSpelling({ goHome }) {
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
           onClick={goNextQuestionOrFinish}
-          disabled={currentWordIndex === words.length - 1 && !answered[currentWordIndex]?.status === "correct"}
+          disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
         >คำถัดไป</button>
         <button
           className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
