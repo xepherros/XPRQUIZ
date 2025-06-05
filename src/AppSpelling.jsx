@@ -153,7 +153,7 @@ export default function AppSpelling({ goHome }) {
   // === logic เกม ===
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
-  // แบ่งแต่ละคำเป็นบรรทัด (fix ปัญหา "ช่องว่าง" ทำให้กล่องแปลก)
+  // แก้บั๊กบรรทัดว่าง: ไม่สร้างบรรทัดเปล่าจากช่องว่าง
   function renderWordLines() {
     const lines = [];
     let currentLine = [];
@@ -163,9 +163,10 @@ export default function AppSpelling({ goHome }) {
           lines.push(currentLine);
           currentLine = [];
         }
+        // ไม่ต้อง push บรรทัดว่าง
       } else {
         currentLine.push({ slot, idx });
-        if (idx === slots.length - 1) {
+        if (idx === slots.length - 1 && currentLine.length > 0) {
           lines.push(currentLine);
         }
       }
@@ -584,20 +585,20 @@ export default function AppSpelling({ goHome }) {
           disabled={isAnsweredCorrect}
         >🔄 รีเซ็ต</button>
         <button
-          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
-          onClick={speak}
-        >🔊 ฟังเสียง</button>
-        <button
           className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
           onClick={goPrevQuestion}
           disabled={currentWordIndex === 0}
-        >⏮️ คำก่อนหน้า</button>
+        >⬅️ คำก่อนหน้า</button>
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
           onClick={goNextQuestionOrFinish}
+          // ปุ่มคำถัดไปเปิดตลอด ยกเว้นข้อสุดท้ายที่ยังไม่ถูก
           disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
-        >⏭️ คำถัดไป</button>
-
+        >คำถัดไป</button>
+        <button
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
+          onClick={speak}
+        >🔊 ฟังเสียง</button>
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         <button
