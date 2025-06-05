@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-// ส่ง prop: { onBack, goHome, initialWeek, SHEET_API_URL, gameType }
+// ส่ง prop: { onBack, goHome, initialWeek, SHEET_API_URL }
 export default function VocabLeaderboard({
   onBack,
   goHome,
   initialWeek = "week_1",
-  SHEET_API_URL = "/api/gas-proxy",
-  gameType = "vocab" // เพิ่ม default "vocab"
+  SHEET_API_URL = "/api/gas-proxy"
 }) {
   const [week, setWeek] = useState(initialWeek);
   const [data, setData] = useState([]);
@@ -16,9 +15,9 @@ export default function VocabLeaderboard({
     async function fetchLeaderboard() {
       setLoading(true);
       try {
-        // เพิ่มการ filter ตาม gameType
+        // ลบ gameType ออกจาก query string
         const res = await fetch(
-          `${SHEET_API_URL}?week=${encodeURIComponent(week)}&gameType=${encodeURIComponent(gameType)}`
+          `${SHEET_API_URL}?path=vocab&week=${encodeURIComponent(week)}`
         );
         let list = await res.json();
         // กรองชื่อซ้ำ เอาเวลาน้อยสุด
@@ -35,7 +34,7 @@ export default function VocabLeaderboard({
       setLoading(false);
     }
     fetchLeaderboard();
-  }, [week, SHEET_API_URL, gameType]);
+  }, [week, SHEET_API_URL]);
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50"
