@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import words from './weekly_vocab_list.json';
+import VocabLeaderboard from './VocabLeaderboard';
 
 // ========== เพิ่ม URL Google Apps Script ==========
 const SHEET_API_URL = "/api/gas-proxy";
@@ -62,8 +63,8 @@ export default function AppVocab({ goHome }) {
   const [startTime, setStartTime] = useState(Date.now());
   const [finished, setFinished] = useState(false);
   const [currentWeek, setCurrentWeek] = useState('');
-  // Leaderboard
-  const [leaderboard, setLeaderboard] = useState([]);
+
+  // Leaderboard modal state
   const [showLB, setShowLB] = useState(false);
 
   // reset state และแจ้ง parent กลับเมนูหลัก
@@ -82,7 +83,6 @@ export default function AppVocab({ goHome }) {
     setStartTime(Date.now());
     setFinished(false);
     setCurrentWeek('');
-    setLeaderboard([]);
     setShowLB(false);
     if (goHome) goHome();
   };
@@ -186,16 +186,9 @@ export default function AppVocab({ goHome }) {
   }
 
   // === ฟังก์ชันดึงอันดับจาก Google Sheet ===
-  async function fetchLeaderboard(week) {
-    try {
-      const res = await fetch(`${SHEET_API_URL}?week=${encodeURIComponent(week)}`);
-      return await res.json();
-    } catch (err) {
-      return [];
-    }
-  }
+  // VocabLeaderboard จะเรียกใช้งานเอง
 
-  // === แก้ saveScore ให้บันทึกขึ้น Google Sheet ===
+  // === ฟังก์ชันบันทึกคะแนน ===
   const saveScore = () => {
     if (!nickname || !elapsed || !currentWeek) return;
     saveScoreOnline({ name: nickname, time: elapsed, week: currentWeek });
@@ -258,23 +251,6 @@ export default function AppVocab({ goHome }) {
     }
   };
 
-  // === ฟังก์ชันสำหรับปุ่ม "ดูอันดับ" ===
-  const handleShowLeaderboard = async () => {
-    const data = await fetchLeaderboard(currentWeek || week);
-    const unique = {};
-    data.forEach(item => {
-      if (
-        !unique[item.name] ||
-        Number(item.time) < Number(unique[item.name].time)
-      ) {
-        unique[item.name] = item;
-      }
-    });
-    const filtered = Object.values(unique).sort((a, b) => Number(a.time) - Number(b.time));
-    setLeaderboard(filtered.slice(0, 10)); // Top 10
-    setShowLB(true);
-  };
-
   // --- RENDER ---
   return (
     <div
@@ -333,7 +309,7 @@ export default function AppVocab({ goHome }) {
             <div className="flex flex-wrap gap-3 justify-center mt-4">
               <button
                 type="button"
-                onClick={handleShowLeaderboard}
+                onClick={() => setShowLB(true)}
                 className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl flex items-center gap-2"
               >
                 <span role="img" aria-label="trophy">🏆</span> ดูอันดับ
@@ -346,30 +322,13 @@ export default function AppVocab({ goHome }) {
                 <span role="img" aria-label="home">🏠</span> กลับหน้าหลัก
               </button>
             </div>
-            {/* แสดง leaderboard modal หลังบ้านในหน้าแรก */}
             {showLB && (
-              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div className="bg-pastel rounded-xl shadow p-4 border max-w-md w-full">
-                  <h2 className="text-lg font-bold text-purple-700 mb-2 text-center">🏆 อันดับ Top 10 ({week ? week.toUpperCase() : "-"})</h2>
-                  {leaderboard.length === 0 ? (
-                    <p className="text-center">ยังไม่มีคะแนนในสัปดาห์นี้</p>
-                  ) : (
-                    <ol className="text-left pl-6">
-                      {leaderboard.map((item, idx) => (
-                        <li key={idx} className="mb-1">
-                          <span className="font-semibold">{idx + 1}.</span> {item.name} <span className="text-gray-500">({item.time} วินาที)</span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                  <button
-                    onClick={() => setShowLB(false)}
-                    className="mt-3 bg-gray-300 hover:bg-gray-400 text-black px-3 py-1 rounded block mx-auto"
-                  >
-                    ปิดอันดับ
-                  </button>
-                </div>
-              </div>
+              <VocabLeaderboard
+                onBack={() => setShowLB(false)}
+                goHome={handleGoHome}
+                initialWeek={week || "week_1"}
+                SHEET_API_URL={SHEET_API_URL}
+              />
             )}
           </div>
         ) : (
@@ -430,28 +389,13 @@ export default function AppVocab({ goHome }) {
                 </div>
               </div>
 
-              {/* แสดงอันดับ (Leaderboard) */}
               {showLB && (
-                <div className="mt-8 space-y-2 max-w-md mx-auto bg-pastel rounded-xl shadow p-4 border">
-                  <h2 className="text-lg font-bold text-purple-700 mb-2">🏆 อันดับ Top 10 ({currentWeek.toUpperCase()})</h2>
-                  {leaderboard.length === 0 ? (
-                    <p>ยังไม่มีคะแนนในสัปดาห์นี้</p>
-                  ) : (
-                    <ol className="text-left pl-6">
-                      {leaderboard.map((item, idx) => (
-                        <li key={idx} className="mb-1">
-                          <span className="font-semibold">{idx + 1}.</span> {item.name} <span className="text-gray-500">({item.time} วินาที)</span>
-                        </li>
-                      ))}
-                    </ol>
-                  )}
-                  <button
-                    onClick={() => setShowLB(false)}
-                    className="mt-2 bg-gray-300 hover:bg-gray-400 text-black px-3 py-1 rounded"
-                  >
-                    ปิดอันดับ
-                  </button>
-                </div>
+                <VocabLeaderboard
+                  onBack={() => setShowLB(false)}
+                  goHome={handleGoHome}
+                  initialWeek={currentWeek || week}
+                  SHEET_API_URL={SHEET_API_URL}
+                />
               )}
 
               {finished && (
@@ -481,7 +425,7 @@ export default function AppVocab({ goHome }) {
                   ⏭️ สัปดาห์ถัดไป
                 </button>
                 <button
-                  onClick={handleShowLeaderboard}
+                  onClick={() => setShowLB(true)}
                   className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
                 >
                   🏆 ดูอันดับ
