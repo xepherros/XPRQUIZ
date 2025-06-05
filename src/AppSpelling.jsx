@@ -98,24 +98,45 @@ export default function AppSpelling({ goHome }) {
     setShowConfirmFinish(false);
   }
 
+  // เตรียม slots (เฉพาะตัวอักษร, ไม่รวมช่องว่าง) และ tiles
   useEffect(() => {
     if (!started) return;
     if (!words.length) return;
     const word = words[currentWordIndex].toUpperCase();
     const letters = word.replace(/ /g, '').split('');
     let prevAns = answered[currentWordIndex];
+
     let slotArr;
     if (prevAns?.status === "correct" && prevAns.answer) {
-      let ansArr = prevAns.answer.split('');
-      slotArr = word.split("").map((char, idx) =>
-        char === " " ? { letter: " ", filled: true, tile: null }
-        : { letter: char, filled: true, tile: { letter: ansArr.shift(), id: `answered-${idx}` } }
-      );
+      let ansArr = prevAns.answer.replace(/ /g, '').split('');
+      // เฉลย: สร้าง slot ตามจำนวนตัวอักษร (ไม่รวมช่องว่าง)
+      slotArr = [];
+      let ansIndex = 0;
+      for (let i = 0; i < word.length; ++i) {
+        if (word[i] !== " ") {
+          slotArr.push({
+            letter: word[i],
+            filled: true,
+            tile: ansArr[ansIndex]
+              ? { letter: ansArr[ansIndex], id: `answered-${currentWordIndex}-${i}` }
+              : null
+          });
+          ansIndex++;
+        }
+      }
       setTiles([]);
     } else {
-      slotArr = word.split("").map(char =>
-        char === " " ? { letter: " ", filled: true, tile: null } : { letter: char, filled: false, tile: null }
-      );
+      // ยังไม่ถูก: สร้าง slot ตามจำนวนตัวอักษร (ไม่รวมช่องว่าง)
+      slotArr = [];
+      for (let i = 0; i < word.length; ++i) {
+        if (word[i] !== " ") {
+          slotArr.push({
+            letter: word[i],
+            filled: false,
+            tile: null
+          });
+        }
+      }
       setTiles(shuffleArray(letters).map((l, i) => ({ letter: l, id: `${l}-${i}` })));
     }
     setSlots(slotArr);
@@ -144,13 +165,14 @@ export default function AppSpelling({ goHome }) {
 
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
-  // ป้องกัน TILE เลื่อนผิด slot หรือ index ผิดตอนตอบถูก และ interactive ปกติ
+  // --- renderWordLines: ช่องว่างในแต่ละบรรทัดจะ skip ไม่สร้างช่อง, ช่องตัวอักษรจะ map กับ slots ---
   function renderWordLines() {
     const word = words[currentWordIndex].toUpperCase();
     const ans = answered[currentWordIndex]?.answer;
     const isCorrect = answered[currentWordIndex]?.status === "correct";
-    let ansIdx = 0;
+
     let slotIndex = 0;
+    let ansIndex = 0;
     let lines = [];
     let currentLine = [];
     for (let i = 0; i < word.length; ++i) {
@@ -159,18 +181,18 @@ export default function AppSpelling({ goHome }) {
         currentLine = [];
       } else {
         if (isCorrect && ans) {
-          // เฉลย: สร้าง slot ใหม่จากคำตอบ
-          let char = ans[ansIdx];
+          // เฉลย: render ช่องจากคำตอบ (แต่ต้องนับเฉพาะตัวอักษร)
+          let char = ans.replace(/ /g, '')[ansIndex];
           let slotObj = {
             letter: word[i],
             tile: char ? { letter: char } : null
           };
-          currentLine.push({ slot: slotObj, idx: ansIdx });
-          ansIdx++;
+          currentLine.push({ slot: slotObj, slotIndex: ansIndex });
+          ansIndex++;
         } else {
-          // ยังไม่ถูก: ใช้ slot object จาก state slots[slotIndex] (ไม่ใช่ i)
+          // ยังไม่ correct: ใช้ slotIndex map กับ slots
           const slot = slots[slotIndex] || { letter: word[i], tile: null };
-          currentLine.push({ slot, idx: slotIndex });
+          currentLine.push({ slot, slotIndex });
           slotIndex++;
         }
       }
@@ -192,9 +214,9 @@ export default function AppSpelling({ goHome }) {
                 minHeight: 48
               }}
             >
-              {line.map(({ slot, idx }) =>
+              {line.map(({ slot, slotIndex }) =>
                 <div
-                  key={idx}
+                  key={slotIndex}
                   style={{
                     width: 36,
                     height: 46,
@@ -216,8 +238,8 @@ export default function AppSpelling({ goHome }) {
                     isCorrect
                       ? undefined
                       : (slot.tile
-                        ? handleSlotClick(idx)
-                        : (selectedTileIdx !== null && handleSlotTap(idx)))
+                        ? handleSlotClick(slotIndex)
+                        : (selectedTileIdx !== null && handleSlotTap(slotIndex)))
                   }
                 >
                   {slot.tile && (
@@ -246,7 +268,7 @@ export default function AppSpelling({ goHome }) {
   const handleSlotDrop = (slotIdx) => {
     if (isAnsweredCorrect) return;
     setSlots(slots => slots.map((slot, i) => {
-      if (i !== slotIdx || slot.letter === " ") return slot;
+      if (i !== slotIdx) return slot;
       if (slot.tile) return slot;
       return { ...slot, filled: true, tile: tiles[selectedTileIdx] };
     }));
@@ -257,7 +279,7 @@ export default function AppSpelling({ goHome }) {
     if (isAnsweredCorrect) return;
     setSlots(slots => {
       const slot = slots[slotIdx];
-      if (slot.letter === " " || !slot.tile) return slots;
+      if (!slot.tile) return slots;
       setTiles(tiles => [...tiles, slot.tile]);
       return slots.map((s, i) => i === slotIdx ? { ...s, filled: false, tile: null } : s);
     });
@@ -267,11 +289,17 @@ export default function AppSpelling({ goHome }) {
     if (!words.length || isAnsweredCorrect) return;
     const word = words[currentWordIndex].toUpperCase();
     const letters = word.replace(/ /g, '').split('');
-    setSlots(
-      word.split("").map(char =>
-        char === " " ? { letter: " ", filled: true, tile: null } : { letter: char, filled: false, tile: null }
-      )
-    );
+    let slotArr = [];
+    for (let i = 0; i < word.length; ++i) {
+      if (word[i] !== " ") {
+        slotArr.push({
+          letter: word[i],
+          filled: false,
+          tile: null
+        });
+      }
+    }
+    setSlots(slotArr);
     setTiles(shuffleArray(letters).map((l, i) => ({ letter: l, id: `${l}-${i}` })));
     setResult("");
     setResultColor("black");
@@ -281,12 +309,21 @@ export default function AppSpelling({ goHome }) {
   const checkAnswer = () => {
     if (isAnsweredCorrect) return;
     let built = "";
-    slots.forEach(slot => {
-      if (slot.letter === " ") built += " ";
-      else if (slot.tile) built += slot.tile.letter;
-      else built += "_";
-    });
-    const solution = words[currentWordIndex].toUpperCase().replace(/ +/g, " ");
+    let slotIdx = 0;
+    const word = words[currentWordIndex].toUpperCase();
+    for (let i = 0; i < word.length; ++i) {
+      if (word[i] === " ") {
+        built += " ";
+      } else {
+        if (slots[slotIdx] && slots[slotIdx].tile) {
+          built += slots[slotIdx].tile.letter;
+        } else {
+          built += "_";
+        }
+        slotIdx++;
+      }
+    }
+    const solution = word.replace(/ +/g, " ");
     if (built === solution) {
       playSound(correctSound);
       setAnswered(ansList => {
