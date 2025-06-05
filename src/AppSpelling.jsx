@@ -587,12 +587,12 @@ export default function AppSpelling({ goHome }) {
           className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
           onClick={goPrevQuestion}
           disabled={currentWordIndex === 0}
-        >⬅️ คำก่อนหน้า</button>
+        >⏮️ คำก่อนหน้า</button>
         <button
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
           onClick={goNextQuestionOrFinish}
           disabled={currentWordIndex === words.length - 1 && !isAnsweredCorrect}
-        >คำถัดไป</button>
+        >⏭️ คำถัดไป</button>
         <button
           className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
           onClick={speak}
