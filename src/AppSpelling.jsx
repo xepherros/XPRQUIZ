@@ -35,6 +35,18 @@ const wordBank = {
   ]
 };
 
+// ---------- ฟังก์ชันช่วยจัดอันดับไม่โชว์ชื่อซ้ำ ----------
+function uniqueHighestLeaderboard(list) {
+  const map = {};
+  list.forEach(item => {
+    // ถ้าชื่อซ้ำ ให้เก็บคะแนนที่มากที่สุด
+    if (!map[item.name] || map[item.name] < item.score) {
+      map[item.name] = item.score;
+    }
+  });
+  return Object.entries(map).map(([name, score]) => ({ name, score }));
+}
+
 function playSound(src) {
   const audio = new window.Audio(src);
   audio.currentTime = 0;
@@ -47,10 +59,12 @@ function shuffleArray(array) {
     .map(({ val }) => val);
 }
 function getLeaderboard(week) {
-  return JSON.parse(localStorage.getItem('spelling-leaderboard-week-' + week) || "[]");
+  const raw = JSON.parse(localStorage.getItem('spelling-leaderboard-week-' + week) || "[]");
+  return uniqueHighestLeaderboard(raw);
 }
 function saveLeaderboard(week, leaderboard) {
-  localStorage.setItem('spelling-leaderboard-week-' + week, JSON.stringify(leaderboard));
+  const uniqueList = uniqueHighestLeaderboard(leaderboard);
+  localStorage.setItem('spelling-leaderboard-week-' + week, JSON.stringify(uniqueList));
 }
 
 export default function AppSpelling({ goHome }) {
@@ -356,7 +370,7 @@ export default function AppSpelling({ goHome }) {
     }
   };
 
-  // ✅ แก้ตรงนี้: อนุญาตให้กดต่อได้แม้ข้อสุดท้ายจะยังไม่ถูกต้อง
+  // อนุญาตให้กดต่อได้แม้ข้อสุดท้ายจะยังไม่ถูกต้อง
   function goNextQuestionOrFinish() {
     if (currentWordIndex < words.length - 1) {
       setCurrentWordIndex(idx => idx + 1);
@@ -383,7 +397,7 @@ export default function AppSpelling({ goHome }) {
     lb.push({ name: playerName, score });
     saveLeaderboard(week, lb);
     setLeaderboard(
-      lb.sort((a, b) => b.score - a.score).slice(0, 10)
+      getLeaderboard(week).sort((a, b) => b.score - a.score).slice(0, 10)
     );
     playSound(winSound);
   }
@@ -664,18 +678,23 @@ export default function AppSpelling({ goHome }) {
           disabled={isAnsweredCorrect}
         >🔄 รีเซ็ต</button>
         <button
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
+          onClick={speak}
+        >🔊 ฟังเสียง</button>
+        <button
           className="bg-blue-400 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
           onClick={goPrevQuestion}
           disabled={currentWordIndex === 0}
         >⬅️ คำก่อนหน้า</button>
         <button
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl"
+          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl flex items-center gap-2"
           onClick={goNextQuestionOrFinish}
-        >{currentWordIndex === words.length - 1 ? "สรุปคะแนน" : "คำถัดไป"}</button>
-        <button
-          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl"
-          onClick={speak}
-        >🔊 ฟังเสียง</button>
+        >
+          {currentWordIndex === words.length - 1
+            ? <><span>สรุปคะแนน</span> <span role="img" aria-label="score">🏁</span></>
+            : <><span>คำถัดไป</span> <span role="img" aria-label="next">➡️</span></>
+          }
+        </button>
       </div>
       <div className="flex flex-wrap gap-3 justify-center mt-2">
         <button
