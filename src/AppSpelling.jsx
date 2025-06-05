@@ -1,11 +1,10 @@
-// (ไฟล์นี้เหมือนกับโพสต์ก่อนหน้า แต่จัด format สำหรับ copy ทั้งไฟล์)
 import React, { useEffect, useRef, useState } from "react";
 
 const correctSound = '/sounds/Correct.mp3';
 const wrongSound = '/sounds/Wrong.wav';
 const winSound = '/sounds/Win.wav';
 
-const SHEET_API_URL = "/api/gas-proxy"; // <<< ใช้ API เดียวกับ AppVocab
+const SHEET_API_URL = "/api/gas-proxy"; // Proxy API
 
 const wordBank = {
   1: [
@@ -43,6 +42,7 @@ function playSound(src) {
   audio.currentTime = 0;
   audio.play();
 }
+
 function shuffleArray(array) {
   return array
     .map(val => ({ val, sort: Math.random() }))
@@ -53,9 +53,9 @@ function shuffleArray(array) {
 // === ฟังก์ชันบันทึกคะแนนและดึง leaderboard (ออนไลน์) ===
 async function saveScoreOnline({ name, score, week }) {
   try {
-    await fetch(SHEET_API_URL, {
+    await fetch(`${SHEET_API_URL}?path=spelling`, {
       method: "POST",
-      body: JSON.stringify({ name, score, week: `week_${week}`, gameType: "spelling" }),
+      body: JSON.stringify({ name, score, week: `week_${week}` }),
       headers: { "Content-Type": "application/json" }
     });
   } catch (err) {
@@ -64,7 +64,7 @@ async function saveScoreOnline({ name, score, week }) {
 }
 async function fetchLeaderboardOnline(week) {
   try {
-    const res = await fetch(`${SHEET_API_URL}?week=week_${week}&gameType=spelling`);
+    const res = await fetch(`${SHEET_API_URL}?path=spelling&week=week_${week}`);
     let data = await res.json();
     // เหลือชื่อเดียว คะแนนสูงสุด
     const unique = {};
