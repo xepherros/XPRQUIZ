@@ -28,7 +28,7 @@ export default function MainMenu({ onSelect }) {
 
           <button
             onClick={() => onSelect("spelling")}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl text-xl font-bold transition"
+            className="w-full bg-[#CBC2FF] hover:bg-blue-600 text-white py-3 rounded-xl text-xl font-bold transition"
           >
             🔤 เกมสะกดคำ
           </button>
