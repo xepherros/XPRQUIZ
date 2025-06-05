@@ -21,7 +21,7 @@ export default function MainMenu({ onSelect }) {
         <div className="space-y-4">
           <button
             onClick={() => onSelect("vocab")}
-            className="w-full bg-[#b3e5fc] hover:bg-green-600 text-white py-3 rounded-xl text-xl font-bold transition"
+            className="w-full bg-[#b2f7ef] hover:bg-green-600 text-white py-3 rounded-xl text-xl font-bold transition"
           >
             🎮 เกมจับคู่คำศัพท์
           </button>
