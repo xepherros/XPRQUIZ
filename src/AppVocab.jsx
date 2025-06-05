@@ -269,157 +269,173 @@ export default function AppVocab({ goHome }) {
   };
 
   // --- RENDER ---
-  if (!start) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-pastel px-4">
-        <div className="bg-white p-6 rounded-2xl shadow max-w-md w-full space-y-4">
-          <h1 className="text-2xl font-bold text-center">เริ่มเกมจับคู่คำศัพท์</h1>
-          <input
-            className="w-full border p-2 rounded"
-            placeholder="กรอกชื่อเล่น"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-          />
-          <select
-            className="w-full border p-2 rounded"
-            value={week}
-            onChange={(e) => setWeek(e.target.value)}
-          >
-            <option value="">เลือกสัปดาห์</option>
-            {[...Array(7)].map((_, i) => (
-              <option key={i} value={`week_${i + 1}`}>Week {i + 1}</option>
-            ))}
-          </select>
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 transition"
-            onClick={handleStart}
-          >
-            เริ่มเกม
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen p-6 bg-pastel font-sans text-center">
-      <h1 className="text-xl font-bold mb-2">จับคู่คำศัพท์ - {currentWeek.toUpperCase()}</h1>
-      <p className="mb-4">ชื่อ: {nickname} | เวลา: {elapsed}s</p>
-      <div className="grid grid-cols-2 gap-6 max-w-5xl mx-auto">
-        {/* ฝั่งซ้าย: คำศัพท์ */}
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold mb-2">คำศัพท์</h2>
-          {terms.map((term) => {
-            let colorClass = "bg-white";
-            if (matchedIds.includes(term.id)) {
-              colorClass = "bg-green-500 text-white font-bold";
-            } else if (wrongPair && wrongPair.termId === term.id) {
-              colorClass = "bg-red-400 text-white";
-            } else if (selection && selection.type === 'term' && selection.item.id === term.id) {
-              colorClass = "bg-yellow-300 text-black font-bold";
-            }
-            return (
-              <motion.div
-                key={term.id}
-                whileHover={{ scale: matchedIds.includes(term.id) ? 1 : 1.05 }}
-                whileTap={{ scale: matchedIds.includes(term.id) ? 1 : 0.95 }}
-                className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
-                onClick={() => handleSelect('term', term)}
-              >
-                {term.text}
-              </motion.div>
-            );
-          })}
-        </div>
-        {/* ฝั่งขวา: คำแปล */}
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold mb-2">คำแปล</h2>
-          {defs.map((def) => {
-            let colorClass = "bg-white";
-            if (matchedIds.includes(def.id)) {
-              colorClass = "bg-green-500 text-white font-bold";
-            } else if (wrongPair && wrongPair.defId === def.id) {
-              colorClass = "bg-red-400 text-white";
-            } else if (selection && selection.type === 'def' && selection.item.id === def.id) {
-              colorClass = "bg-blue-300 text-black font-bold";
-            }
-            return (
-              <motion.div
-                key={def.id}
-                whileHover={{ scale: matchedIds.includes(def.id) ? 1 : 1.05 }}
-                whileTap={{ scale: matchedIds.includes(def.id) ? 1 : 0.95 }}
-                className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
-                onClick={() => handleSelect('def', def)}
-              >
-                {def.text}
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* แสดงอันดับ (Leaderboard) */}
-      {showLB && (
-        <div className="mt-8 space-y-2 max-w-md mx-auto bg-white rounded-xl shadow p-4 border">
-          <h2 className="text-lg font-bold text-purple-700 mb-2">🏆 อันดับ Top 10 ({currentWeek.toUpperCase()})</h2>
-          {leaderboard.length === 0 ? (
-            <p>ยังไม่มีคะแนนในสัปดาห์นี้</p>
-          ) : (
-            <ol className="text-left pl-6">
-              {leaderboard.map((item, idx) => (
-                <li key={idx} className="mb-1">
-                  <span className="font-semibold">{idx + 1}.</span> {item.name} <span className="text-gray-500">({item.time} วินาที)</span>
-                </li>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center"
+      style={{
+        minHeight: "100vh",
+        minWidth: "100vw",
+        width: "100vw",
+        height: "100vh",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 0,
+        background: "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
+        overflowY: "auto"
+      }}
+    >
+      <div className="relative w-full h-full flex flex-col items-center justify-center z-10">
+        {!start ? (
+          <div className="bg-pastel p-6 rounded-2xl shadow max-w-md w-full space-y-4">
+            <h1 className="text-2xl font-bold text-center">เริ่มเกมจับคู่คำศัพท์</h1>
+            <input
+              className="w-full border p-2 rounded"
+              placeholder="กรอกชื่อเล่น"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+            />
+            <select
+              className="w-full border p-2 rounded"
+              value={week}
+              onChange={(e) => setWeek(e.target.value)}
+            >
+              <option value="">เลือกสัปดาห์</option>
+              {[...Array(7)].map((_, i) => (
+                <option key={i} value={`week_${i + 1}`}>Week {i + 1}</option>
               ))}
-            </ol>
-          )}
-          <button
-            onClick={() => setShowLB(false)}
-            className="mt-2 bg-gray-300 hover:bg-gray-400 text-black px-3 py-1 rounded"
-          >
-            ปิดอันดับ
-          </button>
-        </div>
-      )}
+            </select>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 transition"
+              onClick={handleStart}
+            >
+              เริ่มเกม
+            </button>
+          </div>
+        ) : (
+          <div className="w-full">
+            <div className="min-h-screen p-6 font-sans text-center">
+              <h1 className="text-xl font-bold mb-2">จับคู่คำศัพท์ - {currentWeek.toUpperCase()}</h1>
+              <p className="mb-4">ชื่อ: {nickname} | เวลา: {elapsed}s</p>
+              <div className="grid grid-cols-2 gap-6 max-w-5xl mx-auto">
+                {/* ฝั่งซ้าย: คำศัพท์ */}
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold mb-2">คำศัพท์</h2>
+                  {terms.map((term) => {
+                    let colorClass = "bg-white";
+                    if (matchedIds.includes(term.id)) {
+                      colorClass = "bg-green-500 text-white font-bold";
+                    } else if (wrongPair && wrongPair.termId === term.id) {
+                      colorClass = "bg-red-400 text-white";
+                    } else if (selection && selection.type === 'term' && selection.item.id === term.id) {
+                      colorClass = "bg-yellow-300 text-black font-bold";
+                    }
+                    return (
+                      <motion.div
+                        key={term.id}
+                        whileHover={{ scale: matchedIds.includes(term.id) ? 1 : 1.05 }}
+                        whileTap={{ scale: matchedIds.includes(term.id) ? 1 : 0.95 }}
+                        className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
+                        onClick={() => handleSelect('term', term)}
+                      >
+                        {term.text}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                {/* ฝั่งขวา: คำแปล */}
+                <div className="space-y-2">
+                  <h2 className="text-lg font-semibold mb-2">คำแปล</h2>
+                  {defs.map((def) => {
+                    let colorClass = "bg-white";
+                    if (matchedIds.includes(def.id)) {
+                      colorClass = "bg-green-500 text-white font-bold";
+                    } else if (wrongPair && wrongPair.defId === def.id) {
+                      colorClass = "bg-red-400 text-white";
+                    } else if (selection && selection.type === 'def' && selection.item.id === def.id) {
+                      colorClass = "bg-blue-300 text-black font-bold";
+                    }
+                    return (
+                      <motion.div
+                        key={def.id}
+                        whileHover={{ scale: matchedIds.includes(def.id) ? 1 : 1.05 }}
+                        whileTap={{ scale: matchedIds.includes(def.id) ? 1 : 0.95 }}
+                        className={`p-3 rounded-xl cursor-pointer shadow border text-sm transition-colors duration-200 ${colorClass}`}
+                        onClick={() => handleSelect('def', def)}
+                      >
+                        {def.text}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </div>
 
-      {finished && (
-        <div className="mt-8 space-y-4">
-          <h2 className="text-xl font-bold text-green-600">🎉 จบเกมแล้ว!</h2>
-          <p className="text-md">คุณใช้เวลา <strong>{elapsed} วินาที</strong></p>
-        </div>
-      )}
+              {/* แสดงอันดับ (Leaderboard) */}
+              {showLB && (
+                <div className="mt-8 space-y-2 max-w-md mx-auto bg-pastel rounded-xl shadow p-4 border">
+                  <h2 className="text-lg font-bold text-purple-700 mb-2">🏆 อันดับ Top 10 ({currentWeek.toUpperCase()})</h2>
+                  {leaderboard.length === 0 ? (
+                    <p>ยังไม่มีคะแนนในสัปดาห์นี้</p>
+                  ) : (
+                    <ol className="text-left pl-6">
+                      {leaderboard.map((item, idx) => (
+                        <li key={idx} className="mb-1">
+                          <span className="font-semibold">{idx + 1}.</span> {item.name} <span className="text-gray-500">({item.time} วินาที)</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  <button
+                    onClick={() => setShowLB(false)}
+                    className="mt-2 bg-gray-300 hover:bg-gray-400 text-black px-3 py-1 rounded"
+                  >
+                    ปิดอันดับ
+                  </button>
+                </div>
+              )}
 
-      <div className="flex flex-wrap justify-center gap-4 mt-4">
-        <button
-          onClick={restart}
-          className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
-        >
-          🔄 เริ่มใหม่
-        </button>
-        <button
-          onClick={goPrevWeek}
-          className="bg-blue-500 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
-        >
-          ⏮️ สัปดาห์ก่อนหน้า
-        </button>
-        <button
-          onClick={goNextWeek}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
-        >
-          ⏭️ สัปดาห์ถัดไป
-        </button>
-        <button
-          onClick={handleShowLeaderboard}
-          className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
-        >
-          🏆 ดูอันดับ
-        </button>
-        <button
-          onClick={handleGoHome}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
-        >
-          🏠 กลับหน้าหลัก
-        </button>
+              {finished && (
+                <div className="mt-8 space-y-4">
+                  <h2 className="text-xl font-bold text-green-600">🎉 จบเกมแล้ว!</h2>
+                  <p className="text-md">คุณใช้เวลา <strong>{elapsed} วินาที</strong></p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap justify-center gap-4 mt-4">
+                <button
+                  onClick={restart}
+                  className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
+                >
+                  🔄 เริ่มใหม่
+                </button>
+                <button
+                  onClick={goPrevWeek}
+                  className="bg-blue-500 hover:bg-blue-500 text-white px-4 py-2 rounded-xl"
+                >
+                  ⏮️ สัปดาห์ก่อนหน้า
+                </button>
+                <button
+                  onClick={goNextWeek}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+                >
+                  ⏭️ สัปดาห์ถัดไป
+                </button>
+                <button
+                  onClick={handleShowLeaderboard}
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
+                >
+                  🏆 ดูอันดับ
+                </button>
+                <button
+                  onClick={handleGoHome}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+                >
+                  🏠 กลับหน้าหลัก
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
