@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import words from './weekly_vocab_list.json';
 import VocabLeaderboard from './VocabLeaderboard';
 
-// ========== Proxy API URL ==========
 const SHEET_API_URL = "/api/gas-proxy";
-// ===================================
 
 function speak(text, lang = 'auto') {
   let detectLang = lang;
@@ -32,15 +30,43 @@ function speak(text, lang = 'auto') {
   window.speechSynthesis.speak(utter);
 }
 
-function playSound(src) {
-  const audio = new window.Audio(src);
-  audio.currentTime = 0;
-  audio.play();
-}
-
+// ---------- แก้ไขจุดนี้ ----------
 const correctSound = '/sounds/Correct.mp3';
 const wrongSound = '/sounds/Wrong.wav';
 const winSound = '/sounds/Win.wav';
+
+function usePreloadedSounds() {
+  const correctRef = useRef();
+  const wrongRef = useRef();
+  const winRef = useRef();
+
+  useEffect(() => {
+    correctRef.current = new window.Audio(correctSound);
+    wrongRef.current = new window.Audio(wrongSound);
+    winRef.current = new window.Audio(winSound);
+  }, []);
+
+  // ฟังก์ชันสำหรับเล่นเสียง
+  const playCorrect = () => {
+    if (correctRef.current) {
+      correctRef.current.currentTime = 0;
+      correctRef.current.play();
+    }
+  };
+  const playWrong = () => {
+    if (wrongRef.current) {
+      wrongRef.current.currentTime = 0;
+      wrongRef.current.play();
+    }
+  };
+  const playWin = () => {
+    if (winRef.current) {
+      winRef.current.currentTime = 0;
+      winRef.current.play();
+    }
+  };
+  return { playCorrect, playWrong, playWin };
+}
 
 function shuffle(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
@@ -66,6 +92,9 @@ export default function AppVocab({ goHome }) {
 
   // Leaderboard modal state
   const [showLB, setShowLB] = useState(false);
+
+  // ---------- เพิ่ม hook preload เสียง ----------
+  const { playCorrect, playWrong, playWin } = usePreloadedSounds();
 
   // reset state และแจ้ง parent กลับเมนูหลัก
   const handleGoHome = () => {
@@ -101,7 +130,6 @@ export default function AppVocab({ goHome }) {
     setCurrentWeek(week);
   };
 
-  // --- GAME LOGIC ---
   function generateTermDef(vocab) {
     return {
       terms: vocab.map((v, i) => ({ id: i, text: v.term, pair: v.definition })),
@@ -134,7 +162,7 @@ export default function AppVocab({ goHome }) {
   useEffect(() => {
     if (terms.length > 0 && matchedIds.length === terms.length && !finished) {
       setFinished(true);
-      playSound(winSound);
+      playWin();
       saveScore();
     }
     // eslint-disable-next-line
@@ -157,12 +185,12 @@ export default function AppVocab({ goHome }) {
     const term = type === 'term' ? item : selection.item;
     const def = type === 'def' ? item : selection.item;
     if (term.id === def.id) {
-      playSound(correctSound);
+      playCorrect();
       setMatchedIds([...matchedIds, term.id]);
       setSelection(null);
       setWrongPair(null);
     } else {
-      playSound(wrongSound);
+      playWrong();
       setWrongPair({ termId: term.id, defId: def.id });
       setTimeout(() => {
         setWrongPair(null);
@@ -171,7 +199,6 @@ export default function AppVocab({ goHome }) {
     }
   };
 
-  // === ฟังก์ชันบันทึกคะแนนขึ้น Google Sheet ===
   async function saveScoreOnline({ name, time, week }) {
     try {
       await fetch(`${SHEET_API_URL}?path=vocab`, {
@@ -184,7 +211,6 @@ export default function AppVocab({ goHome }) {
     }
   }
 
-  // === ฟังก์ชันบันทึกคะแนน ===
   const saveScore = () => {
     if (!nickname || !elapsed || !currentWeek) return;
     saveScoreOnline({ name: nickname, time: elapsed, week: currentWeek });
@@ -324,7 +350,6 @@ export default function AppVocab({ goHome }) {
                 goHome={handleGoHome}
                 initialWeek={week || "week_1"}
                 SHEET_API_URL={SHEET_API_URL}
-          
               />
             )}
           </div>
@@ -392,7 +417,6 @@ export default function AppVocab({ goHome }) {
                   goHome={handleGoHome}
                   initialWeek={currentWeek || week}
                   SHEET_API_URL={SHEET_API_URL}
-          
                 />
               )}
 
