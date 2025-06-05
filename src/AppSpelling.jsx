@@ -144,12 +144,13 @@ export default function AppSpelling({ goHome }) {
 
   const isAnsweredCorrect = answered[currentWordIndex]?.status === "correct";
 
-  // renderWordLines ที่แก้ไขให้ถูกต้องทั้ง interactive และเฉลย
+  // ป้องกัน TILE เลื่อนผิด slot หรือ index ผิดตอนตอบถูก และ interactive ปกติ
   function renderWordLines() {
     const word = words[currentWordIndex].toUpperCase();
     const ans = answered[currentWordIndex]?.answer;
     const isCorrect = answered[currentWordIndex]?.status === "correct";
     let ansIdx = 0;
+    let slotIndex = 0;
     let lines = [];
     let currentLine = [];
     for (let i = 0; i < word.length; ++i) {
@@ -164,11 +165,13 @@ export default function AppSpelling({ goHome }) {
             letter: word[i],
             tile: char ? { letter: char } : null
           };
-          currentLine.push({ slot: slotObj, idx: i });
+          currentLine.push({ slot: slotObj, idx: ansIdx });
           ansIdx++;
         } else {
-          // ยังไม่ถูก: ใช้ slot object จาก state (เพื่อ interactive)
-          currentLine.push({ slot: slots[i], idx: i });
+          // ยังไม่ถูก: ใช้ slot object จาก state slots[slotIndex] (ไม่ใช่ i)
+          const slot = slots[slotIndex] || { letter: word[i], tile: null };
+          currentLine.push({ slot, idx: slotIndex });
+          slotIndex++;
         }
       }
     }
@@ -283,7 +286,7 @@ export default function AppSpelling({ goHome }) {
       else if (slot.tile) built += slot.tile.letter;
       else built += "_";
     });
-    const solution = words[currentWordIndex].toUpperCase();
+    const solution = words[currentWordIndex].toUpperCase().replace(/ +/g, " ");
     if (built === solution) {
       playSound(correctSound);
       setAnswered(ansList => {
