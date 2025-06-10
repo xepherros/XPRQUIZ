@@ -12,8 +12,8 @@ const wordBank = {
     "Arrival notice", "Berth", "Bill of lading", "Bulk cargo", "Bulk carrier", "Carrier"
   ],
   2: [
-    "Consignee","Container","Customs broker","Dangerous goods","Delivery order",
-    "Demurrage","ETA","ETD","Export license","Freight forwarder"
+    "CARRIER'S AGENT","CONSIGNEE","CONSOLIDATION","CHARGEABLE WEIGHT","CONTAINER CARRIER",
+    "CONVENTIONAL VESSEL","CHARGEABLE WEIGHT","CONTAINER YARD","CY/CY","CFS/CFS"
   ],
   3: [
     "Freight prepaid","Gross weight","Handling","Import license","Incoterms",
