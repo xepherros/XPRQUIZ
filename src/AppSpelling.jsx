@@ -37,7 +37,7 @@ const wordBank = {
   ]
 };
 
-// ----------- แก้ไข: preload และ reuse เสียง -----------
+// ----------- preload และ reuse เสียง -----------
 function usePreloadedSounds() {
   const correctRef = useRef();
   const wrongRef = useRef();
@@ -106,6 +106,25 @@ async function fetchLeaderboardOnline(week) {
   }
 }
 
+// ======= ฟังก์ชันพูด (เลือก Samantha อัตโนมัติ) =======
+const speak = (text) => {
+  const synth = window.speechSynthesis;
+  let voices = synth.getVoices();
+  let voice = voices.find(v => v.name === "Samantha" && v.lang === "en-US");
+  if (!voice) voice = voices.find(v => v.lang === "en-US");
+  if (!voice) voice = voices[0];
+  let spoken = text.replace(/\bIATA\b/g, "I A T A")
+    .replace(/\bETA\b/g, "E T A")
+    .replace(/\bAWB\b/g, "A W B")
+    .replace(/\bFCL\b/g, "F C L")
+    .replace(/\bLCL\b/g, "L C L");
+  const utter = new window.SpeechSynthesisUtterance(spoken);
+  utter.voice = voice;
+  utter.lang = "en-US";
+  synth.cancel();
+  synth.speak(utter);
+};
+
 export default function AppSpelling({ goHome }) {
   const [playerName, setPlayerName] = useState("");
   const [week, setWeek] = useState("");
@@ -129,7 +148,6 @@ export default function AppSpelling({ goHome }) {
 
   const [showConfirmFinish, setShowConfirmFinish] = useState(false);
 
-  // --- เพิ่ม hook preload เสียง ---
   const { playCorrect, playWrong, playWin } = usePreloadedSounds();
 
   const words = week ? wordBank[week] : [];
@@ -215,7 +233,6 @@ export default function AppSpelling({ goHome }) {
     const word = words[currentWordIndex]?.toUpperCase();
     if (!word) return;
 
-    // สร้างคำที่ประกอบจาก slots
     let built = "";
     let slotIdx = 0;
     for (let i = 0; i < word.length; ++i) {
@@ -230,7 +247,6 @@ export default function AppSpelling({ goHome }) {
         slotIdx++;
       }
     }
-    // ถ้าทุกช่องมีตัวอักษร (ไม่มี "_")
     if (built.indexOf("_") === -1) {
       const solution = word.replace(/ +/g, " ");
       if (built === solution) {
@@ -255,6 +271,7 @@ export default function AppSpelling({ goHome }) {
     // eslint-disable-next-line
   }, [slots]);
 
+  // ===== Responsive renderWordLines =====
   function renderWordLines() {
     const word = words[currentWordIndex].toUpperCase();
     const ans = answered[currentWordIndex]?.answer;
@@ -287,13 +304,18 @@ export default function AppSpelling({ goHome }) {
     if (currentLine.length) lines.push(currentLine);
 
     const maxLen = Math.max(...lines.map(line => line.length));
+    // Responsive: ช่องยืดหยุ่นตามความยาว
+    const boxBase = maxLen > 12 ? 22 : maxLen > 9 ? 26 : 32;
+    const boxFont = maxLen > 12 ? 14 : maxLen > 9 ? 17 : 21;
+
     return (
       <div style={{
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 8,
         marginBottom: 18,
-        alignItems: "center"
+        alignItems: "center",
+        width: "100%"
       }}>
         {lines.map((line, lineIdx) => {
           const rightPad = maxLen - line.length;
@@ -302,34 +324,39 @@ export default function AppSpelling({ goHome }) {
               key={lineIdx}
               style={{
                 display: "flex",
-                gap: 6,
+                gap: 3,
                 flexWrap: "nowrap",
-                minHeight: "clamp(36px, 8vw, 46px)",
+                minHeight: `${boxBase + 14}px`,
                 overflowX: "auto",
-                maxWidth: "100%",
-                scrollbarWidth: "thin",
-                scrollbarColor: "#bdbdbd #fafafa"
+                maxWidth: "100vw",
+                width: "100%",
+                justifyContent: "center"
               }}
             >
               {line.map(({ slot, slotIndex }) =>
                 <div
                   key={slotIndex}
                   style={{
-                    width: "clamp(28px, 7vw, 36px)",
-                    height: "clamp(36px, 9vw, 46px)",
+                    width: `${boxBase + 6}px`,
+                    height: `${boxBase + 14}px`,
+                    minWidth: "0",
                     border: "2px solid #888",
                     borderRadius: 8,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "clamp(18px, 4vw, 28px)",
+                    fontSize: `${boxFont}px`,
                     background: isCorrect
                       ? "#a5e1a2"
                       : slot.tile ? "#e0f7fa" : "#fafbfc",
                     margin: 1,
                     cursor: isCorrect ? "not-allowed" : "pointer",
                     userSelect: "none",
-                    transition: "background .2s"
+                    transition: "background .2s",
+                    boxSizing: "border-box",
+                    flex: `1 1 ${boxBase + 6}px`,
+                    maxWidth: `${100 / maxLen}%`,
+                    overflow: "hidden"
                   }}
                   onClick={() =>
                     isCorrect
@@ -340,16 +367,20 @@ export default function AppSpelling({ goHome }) {
                   }
                 >
                   {slot.tile && (
-                    <span>{slot.tile.letter}</span>
+                    <span style={{ overflowWrap: "break-word" }}>{slot.tile.letter}</span>
                   )}
                 </div>
               )}
               {[...Array(rightPad)].map((_, i) =>
                 <div key={"rpad" + i} style={{
-                  width: "clamp(28px, 7vw, 36px)",
-                  height: "clamp(36px, 9vw, 46px)",
+                  width: `${boxBase + 6}px`,
+                  height: `${boxBase + 14}px`,
+                  minWidth: "0",
                   margin: 1,
-                  background: "none"
+                  background: "none",
+                  boxSizing: "border-box",
+                  flex: `1 1 ${boxBase + 6}px`,
+                  maxWidth: `${100 / maxLen}%`
                 }} />
               )}
             </div>
@@ -436,28 +467,6 @@ export default function AppSpelling({ goHome }) {
     playWin();
   }
 
-  // ======= แก้ฟังก์ชันพูด (เลือก Samantha อัตโนมัติ) =======
-  const speak = (text) => {
-    const synth = window.speechSynthesis;
-    let voices = synth.getVoices();
-    // หา Samantha ก่อน (iOS/US)
-    let voice = voices.find(v => v.name === "Samantha" && v.lang === "en-US");
-    // ถ้าไม่มี Samantha, fallback เป็น en-US ตัวอื่น
-    if (!voice) voice = voices.find(v => v.lang === "en-US");
-    if (!voice) voice = voices[0];
-    // handle exception words
-    let spoken = text.replace(/\bIATA\b/g, "I A T A")
-                     .replace(/\bETA\b/g, "E T A")
-                     .replace(/\bAWB\b/g, "A W B")
-                     .replace(/\bFCL\b/g, "F C L")
-                     .replace(/\bLCL\b/g, "L C L");
-    const utter = new window.SpeechSynthesisUtterance(spoken);
-    utter.voice = voice;
-    utter.lang = "en-US";
-    synth.cancel();
-    synth.speak(utter);
-  };
-
   function restart() {
     setScore(0);
     setCurrentWordIndex(0);
@@ -492,7 +501,88 @@ export default function AppSpelling({ goHome }) {
     setShowLeaderboard(true);
   }
 
-  // === Leaderboard แบบออนไลน์ ===
+  function ConfirmFinishModal() {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+        <div className="bg-pastel p-6 rounded-2xl shadow-lg text-center max-w-xs">
+          <div className="text-xl mb-4 font-bold">คุณแน่ใจหรือไม่ที่จะสรุปคะแนน?</div>
+          <div className="mb-4 text-sm text-gray-600">เมื่อยืนยันแล้วจะไม่สามารถกลับมาแก้ไขได้</div>
+          <button
+            onClick={confirmFinishQuiz}
+            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl mr-2"
+          >
+            สรุปคะแนน
+          </button>
+          <button
+            onClick={() => setShowConfirmFinish(false)}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded-xl"
+          >
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  function FinishModal() {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto">
+        <div className="bg-pastel p-6 rounded-2xl shadow-lg text-center max-w-md w-full">
+          <h2 className="text-2xl text-blue-800 font-bold mb-2">สรุปคะแนน</h2>
+          <div className="mb-2">คุณได้ {score} / {words.length} คะแนน</div>
+          <div className="mb-3 text-left">
+            <div className="font-bold mb-1">ผลลัพธ์:</div>
+            <ol className="list-decimal ml-6">
+              {words.map((w, idx) => (
+                <li key={idx}>
+                  {w} — {answered[idx]?.status === "correct" ? <span className="text-green-700 font-bold">ถูก</span> : <span className="text-orange-700 font-bold">ยังไม่ถูก</span>}
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="font-bold text-blue-800 mb-2">อันดับสูงสุด (Week {week})</div>
+          <ol className="mb-3">
+            {leaderboard.length === 0 ? <li>ยังไม่มีข้อมูล</li> : leaderboard.map((entry, idx) =>
+              <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
+            )}
+          </ol>
+          <div className="flex flex-wrap gap-3 justify-center mt-1">
+            <button
+              onClick={restart}
+              className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
+            >
+              🔄 เริ่มใหม่
+            </button>
+            <button
+              onClick={goPrevWeek}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+            >
+              ⏮️ สัปดาห์ก่อนหน้า
+            </button>
+            <button
+              onClick={goNextWeek}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
+            >
+              ⏭️ สัปดาห์ถัดไป
+            </button>
+            <button
+              onClick={handleShowLeaderboard}
+              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
+            >
+              🏆 ดูอันดับ
+            </button>
+            <button
+              onClick={goHome}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
+            >
+              🏠 กลับหน้าหลัก
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   function Leaderboard({ week, onBack }) {
     const [selWeek, setSelWeek] = useState(week);
     const [lb, setLb] = useState([]);
@@ -623,88 +713,6 @@ export default function AppSpelling({ goHome }) {
     );
   }
 
-  function ConfirmFinishModal() {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div className="bg-pastel p-6 rounded-2xl shadow-lg text-center max-w-xs">
-          <div className="text-xl mb-4 font-bold">คุณแน่ใจหรือไม่ที่จะสรุปคะแนน?</div>
-          <div className="mb-4 text-sm text-gray-600">เมื่อยืนยันแล้วจะไม่สามารถกลับมาแก้ไขได้</div>
-          <button
-            onClick={confirmFinishQuiz}
-            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-xl mr-2"
-          >
-            สรุปคะแนน
-          </button>
-          <button
-            onClick={() => setShowConfirmFinish(false)}
-            className="bg-gray-400 hover:bg-gray-500 text-white px-5 py-2 rounded-xl"
-          >
-            ยกเลิก
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  function FinishModal() {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 overflow-auto">
-        <div className="bg-pastel p-6 rounded-2xl shadow-lg text-center max-w-md w-full">
-          <h2 className="text-2xl text-blue-800 font-bold mb-2">สรุปคะแนน</h2>
-          <div className="mb-2">คุณได้ {score} / {words.length} คะแนน</div>
-          <div className="mb-3 text-left">
-            <div className="font-bold mb-1">ผลลัพธ์:</div>
-            <ol className="list-decimal ml-6">
-              {words.map((w, idx) => (
-                <li key={idx}>
-                  {w} — {answered[idx]?.status === "correct" ? <span className="text-green-700 font-bold">ถูก</span> : <span className="text-orange-700 font-bold">ยังไม่ถูก</span>}
-                </li>
-              ))}
-            </ol>
-          </div>
-          <div className="font-bold text-blue-800 mb-2">อันดับสูงสุด (Week {week})</div>
-          <ol className="mb-3">
-            {leaderboard.length === 0 ? <li>ยังไม่มีข้อมูล</li> : leaderboard.map((entry, idx) =>
-              <li key={idx}>{entry.name} — {entry.score} คะแนน</li>
-            )}
-          </ol>
-          <div className="flex flex-wrap gap-3 justify-center mt-1">
-            <button
-              onClick={restart}
-              className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
-            >
-              🔄 เริ่มใหม่
-            </button>
-            <button
-              onClick={goPrevWeek}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
-            >
-              ⏮️ สัปดาห์ก่อนหน้า
-            </button>
-            <button
-              onClick={goNextWeek}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl"
-            >
-              ⏭️ สัปดาห์ถัดไป
-            </button>
-            <button
-              onClick={handleShowLeaderboard}
-              className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-xl"
-            >
-              🏆 ดูอันดับ
-            </button>
-            <button
-              onClick={goHome}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl"
-            >
-              🏠 กลับหน้าหลัก
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center"
@@ -730,27 +738,28 @@ export default function AppSpelling({ goHome }) {
           marginBottom: 16,
           flexWrap: "wrap",
           justifyContent: "center",
-          minHeight: "clamp(36px, 9vw, 46px)"
+          width: "100%",
+          maxWidth: "100vw"
         }}>
           {tiles.map((tile, idx) => (
             <div
               key={tile.id}
               style={{
-                width: "clamp(28px, 7vw, 36px)",
+                width: "clamp(22px, 7vw, 36px)",
                 height: "clamp(36px, 9vw, 46px)",
                 border: "2px solid #1565c0",
                 borderRadius: 8,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "clamp(18px, 4vw, 28px)",
+                fontSize: "clamp(14px, 4vw, 28px)",
                 background: selectedTileIdx === idx ? "#b3e5fc" : "#fff",
                 color: "#1565c0",
                 fontWeight: "bold",
                 cursor: isAnsweredCorrect ? "not-allowed" : "pointer",
                 userSelect: "none",
                 margin: 1,
-                boxShadow: "0 2px 4px #0001"
+                boxSizing: "border-box"
               }}
               onClick={() => isAnsweredCorrect ? undefined : handleTileTap(idx)}
             >
@@ -767,7 +776,6 @@ export default function AppSpelling({ goHome }) {
           marginBottom: 12
         }}>{result}</div>
         <div className="flex flex-wrap gap-3 justify-center mt-2 mb-2">
-          {/* ปุ่มตรวจคำตอบ ถูกลบออกแล้ว */}
           <button
             className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-2 rounded-xl"
             onClick={resetWord}
