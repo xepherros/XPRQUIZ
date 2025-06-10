@@ -16,24 +16,64 @@ const wordBank = {
     "CONVENTIONAL VESSEL","CHARGEABLE WEIGHT","CONTAINER YARD","CY/CY","CFS/CFS"
   ],
   3: [
-    "Freight prepaid","Gross weight","Handling","Import license","Incoterms",
-    "Manifest","Notify party","Pallet","Port of discharge","Shipper"
+    "DECLARED VALUE FOR CARRIER",
+    "DECLARED VALUE FOR CUSTOMS",
+    "DELIVERY ORDER",
+    "DEMURRAGE CHARGE",
+    "DESCRIPTION OF GOODS",
+    "E.T.A.",
+    "E.T.D.",
+    "EXECUTED ON",
+    "FCL",
+    "FLIGHT/DATE"
   ],
   4: [
-    "Shipping instructions","Shipping marks","Stevedore","Stuffing","Tare weight",
-    "Terminal","Transshipment","Unstuffing","Warehouse","Waybill"
+    "FREIGHT COLLECT",
+    "FREIGHT FORWARDER",
+    "FREIGHT PREPAID",
+    "GROSS WEIGHT",
+    "HAZARDOUS GOODS",
+    "HOUSE AIR WAYBILL",
+    "I.C.D.",
+    "IATA CARGO AGENT",
+    "LCL",
+    "MANIFEST"
   ],
   5: [
-    "Cargo insurance","Certificate of origin","Clean bill of lading","Commercial invoice",
-    "Consignment","Container yard","Customs clearance","Delivery","Documentary credit","Export declaration"
+    "MARK & NO.",
+    "MASTER",
+    "MASTER AIR WAYBILL",
+    "MATE'S RECEIPT",
+    "MEASUREMENT/ GROSS WEIGHT",
+    "MULTIMODAL TRANSPORT DOCUMENT",
+    "N.V.O.C.C.",
+    "NOTIFY PARTY",
+    "NUMBER OF ORIGINAL",
+    "PLACE AND DATE OF ISSUED"
   ],
   6: [
-    "Freight collect","Freight forwarders certificate","Import declaration","Letter of credit",
-    "Packing list","Port of loading","Proforma invoice","Quarantine","Shipping order","Through bill of lading"
+    "PLACE OF DELIVERY",
+    "PLACE OF LOADING",
+    "PLACE OF RECEIPT",
+    "PORT OF DISCHARGE",
+    "PORT OF LOADING",
+    "PRE-CARRIER",
+    "RATE CLASS",
+    "RO-RO CARRIER",
+    "SURRENDER BILL OF LADING",
+    "SHIPPED ON BOARD"
   ],
   7: [
-    "Tramp vessel","Vessel","Warehouse receipt","Wharfage","Air cargo","Booking",
-    "Charter party","Customs duty","Export permit","Transshipment port"
+    "SHIPPER",
+    "SHIPPING AGENT",
+    "SHOULD BE",
+    "TALLY SHEET",
+    "TEU",
+    "THROUGH BILL OF LADING",
+    "UN CLASSIFICATION NUMBER",
+    "V.O.C.C.",
+    "VESSEL",
+    "VOY.NO."
   ]
 };
 
